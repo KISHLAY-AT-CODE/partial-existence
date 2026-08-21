@@ -32,4 +32,11 @@ export const siteConfig = {
       '“To exist is to intrude, to not is to die. Amid is to seek silence and tranquility, and observe the both realm of lies.”',
     attribution: '—Kishlay',
   },
+
+  // Social Defaults (can be overridden or toggled per post in frontmatter)
+  social: {
+    github: 'https://github.com/KISHLAY-AT-CODE',
+    allpoetry: 'https://allpoetry.com',
+  },
 };
+

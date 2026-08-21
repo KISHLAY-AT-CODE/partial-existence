@@ -67,8 +67,15 @@ export default function BlogPost({ slug }) {
 
   const rawHtml = marked.parse(body);
   const safeHtml = DOMPurify.sanitize(rawHtml, {
-    ADD_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'iframe', 'span'],
-    ADD_ATTR: ['id', 'src', 'alt', 'title', 'width', 'height', 'loading', 'style'],
+    ADD_TAGS: [
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'iframe', 'span',
+      'details', 'summary', 'svg', 'path', 'g', 'circle', 'rect', 'line', 'polygon', 'polyline'
+    ],
+    ADD_ATTR: [
+      'id', 'src', 'alt', 'title', 'width', 'height', 'loading', 'style',
+      'class', 'className', 'viewBox', 'fill', 'stroke', 'stroke-width',
+      'stroke-linecap', 'stroke-linejoin', 'xmlns', 'target', 'rel', 'd'
+    ],
   });
 
   const formattedDate = meta.date
@@ -119,8 +126,13 @@ export default function BlogPost({ slug }) {
         dangerouslySetInnerHTML={{ __html: safeHtml }}
       />
 
-      {/* Like & Comment interactions */}
-      <PostInteractions slug={slug} />
+      {/* Like, Comment & Social (GitHub / AllPoetry) interactions */}
+      <PostInteractions
+        slug={slug}
+        github={post.github}
+        allpoetry={post.allpoetry}
+      />
     </article>
   );
 }
+

@@ -3,7 +3,10 @@ icon: ic_launcher.png
 title: "Vinyas : A Student Difficulty Transformed into Someone Else's Equipment"
 date: 2026-08-14
 tags: [blog, technology, vinyas, programming, student-project]
+github: "https://github.com/KISHLAY-AT-CODE"
+
 ---
+
 
 # What is <span style="color:orange">Vinyas?</span>
 ![vinyas screenshot](bg2.png)
@@ -146,3 +149,5 @@ Vinyas went through that loop repeatedly.
 If I had to describe the philosophy of Vinyas in one line, it would be:
 
 **Build the solution to the problem you actually have, then keep improving it until someone else can use it too.**
+
+And finally test it yourself: [Vinyas](https://vinyas-one.vercel.app "Kind of not works on VIT Wifi :(") (Make sure you are not connected to an institution wifi, beacuse test servers like *.vercel.app gets blocked by FortiGuard.)

@@ -11,6 +11,8 @@
  * and exposes sorted listings and single post lookups.
  */
 
+import { siteConfig } from './site.config';
+
 function getSlugFromPath(filePath, metaSlug) {
   if (metaSlug) return metaSlug;
   const normalized = filePath.replace(/\\/g, '/');
@@ -129,6 +131,35 @@ export function parseMarkdownPost(content, filePath = '') {
     }
   }
 
+  // Social link toggles & custom links (github & allpoetry)
+  let github = null;
+  if (meta.github !== undefined && meta.github !== null) {
+    const ghVal = String(meta.github).trim();
+    if (ghVal === 'false' || ghVal === 'none' || ghVal === 'off' || ghVal === '0') {
+      github = null;
+    } else if (ghVal === 'true' || ghVal === '1' || ghVal === 'on') {
+      github = siteConfig?.social?.github || '';
+    } else if (ghVal) {
+      github = ghVal.startsWith('http://') || ghVal.startsWith('https://')
+        ? ghVal
+        : `https://github.com/${ghVal.replace(/^@/, '')}`;
+    }
+  }
+
+  let allpoetry = null;
+  if (meta.allpoetry !== undefined && meta.allpoetry !== null) {
+    const apVal = String(meta.allpoetry).trim();
+    if (apVal === 'false' || apVal === 'none' || apVal === 'off' || apVal === '0') {
+      allpoetry = null;
+    } else if (apVal === 'true' || apVal === '1' || apVal === 'on') {
+      allpoetry = siteConfig?.social?.allpoetry || '';
+    } else if (apVal) {
+      allpoetry = apVal.startsWith('http://') || apVal.startsWith('https://')
+        ? apVal
+        : `https://allpoetry.com/${apVal.replace(/^@/, '')}`;
+    }
+  }
+
   return {
     slug,
     title,
@@ -137,6 +168,8 @@ export function parseMarkdownPost(content, filePath = '') {
     excerpt,
     icon,
     background,
+    github,
+    allpoetry,
     body,
     raw: content,
     filePath,
@@ -148,10 +181,13 @@ export function parseMarkdownPost(content, filePath = '') {
       excerpt,
       icon,
       background,
+      github,
+      allpoetry,
       slug,
     },
   };
 }
+
 
 // Vite dynamic glob: scans recursively across all folders in /posts, /public/posts, and /src/posts
 const markdownFiles = import.meta.glob(

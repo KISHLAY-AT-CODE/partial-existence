@@ -5,7 +5,11 @@ title: "Your Post Title Here"
 date: 2026-08-16
 tags: [technology, programming, thoughts]
 excerpt: "A short one or two sentence summary of the post (optional, auto-generated from the first paragraph if omitted)."
+# Social toggles (optional: provide URL to show, or false/omit to hide)
+github: "https://github.com/KISHLAY-AT-CODE"
+allpoetry: "https://allpoetry.com"
 ---
+
 
 # Your Post Title Here
 
