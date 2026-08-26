@@ -15,16 +15,14 @@ export const siteConfig = {
   hero: {
     avatar: 'avatar.png',
     titlePrefix: 'Who am ',
-    titleAccent: 'I',
+    titleAccent: 'I?',
     subtitle:
       'Reflections on taste, atmosphere, and the quiet discipline of building things that matter — written from the liminal space between intrusion and silence.',
     sectionTitle: 'Blog',
   },
 
-  // Navigation Bar Links
-  nav: [
-    { label: 'Blog', path: '/' },
-  ],
+  // Navigation Bar Links (leave empty if no additional links needed)
+  nav: [],
 
   // Footer Quote & Attribution
   footer: {

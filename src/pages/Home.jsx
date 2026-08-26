@@ -1,4 +1,6 @@
 import PostCard from '../components/PostCard';
+import HeroGrid from '../components/HeroGrid';
+import InteractiveHeroText from '../components/InteractiveHeroText';
 import { getAllPosts } from '../posts';
 import { siteConfig } from '../site.config';
 
@@ -17,22 +19,14 @@ export default function Home() {
   return (
     <div className="fade-in" id="home-page">
       <section className="home__hero" id="about-section">
-        {avatarSrc && (
-          <div className="home__hero-avatar-wrapper">
-            <img
-              src={avatarSrc}
-              alt={siteConfig.author || 'Avatar'}
-              className="home__hero-avatar"
-            />
-          </div>
-        )}
-        <div className="home__hero-content">
-          <h2 className="home__hero-title">
-            {siteConfig.hero.titlePrefix}
-            <span className="home__hero-accent">{siteConfig.hero.titleAccent}</span>
-          </h2>
-          <p className="home__hero-subtitle">{siteConfig.hero.subtitle}</p>
-        </div>
+        <HeroGrid />
+        <InteractiveHeroText
+          titlePrefix={siteConfig.hero.titlePrefix}
+          titleAccent={siteConfig.hero.titleAccent}
+          subtitle={siteConfig.hero.subtitle}
+          avatarSrc={avatarSrc}
+          author={siteConfig.author}
+        />
       </section>
 
       <hr className="home__divider" />
