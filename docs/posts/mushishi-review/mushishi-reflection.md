@@ -9,7 +9,7 @@ github: "https://github.com/KISHLAY-AT-CODE"
 
 # <span style="color:#A6F527">Mushishi</span> : The Haunting Calm
 
-![mushishi wanderer](../../mushishi-bg.jpg)
+![mushishi wanderer](mushishi-bg.jpg)
 *Image Courtesy: Pinterest*
 
 A show where almost nothing is solved, and that is exactly the point.
