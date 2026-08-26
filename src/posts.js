@@ -90,8 +90,8 @@ export function parseMarkdownPost(content, filePath = '') {
   const tags = Array.isArray(meta.tags)
     ? meta.tags
     : typeof meta.tags === 'string'
-    ? [meta.tags]
-    : [];
+      ? [meta.tags]
+      : [];
 
   const basePath = import.meta.env.BASE_URL || '/';
 
@@ -196,6 +196,7 @@ const markdownFiles = import.meta.glob(
 );
 
 // Map of slug -> post data
+
 const postsMap = new Map();
 
 for (const [path, rawContent] of Object.entries(markdownFiles)) {
