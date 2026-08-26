@@ -17,7 +17,7 @@ export const siteConfig = {
     titlePrefix: 'Who am ',
     titleAccent: 'I?',
     subtitle:
-      'Reflections on taste, atmosphere, and the quiet discipline of building things that matter — written from the liminal space between intrusion and silence.',
+      'Hello! Kishlay here, I share my reflections on programming, life, entertainment, books and the quiet discipline of building things that matter — written from the liminal space between intrusion and silence.',
     sectionTitle: 'Blog',
   },
 
@@ -34,7 +34,7 @@ export const siteConfig = {
   // Social Defaults (can be overridden or toggled per post in frontmatter)
   social: {
     github: 'https://github.com/KISHLAY-AT-CODE',
-    allpoetry: 'https://allpoetry.com',
+    allpoetry: 'https://allpoetry.com/partial-existence',
   },
 };
 

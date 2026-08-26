@@ -24,23 +24,21 @@ So the Excel sheet became a Python script.
 
 The script became more capable.
 
-And eventually, the script stopped feeling like a script and started becoming a product.
+And eventually, the script stopped feeling like a script and started becoming a project.
 
-That progression is probably the most important part of Vinyas. It was not designed from the beginning as a grand application. It grew because every version exposed another problem worth solving.
+After my engineering entrance examinations came to a halt, I started building things that I once did and made Vinyas for myself. This is the first project of mine that is not a clone of any existing project and is made from scratch.
 
 ## <span style="color:orange">The Application</span>
 
 Vinyas is a study companion designed around the idea that academic information should be useful rather than merely stored.
 
 The project eventually evolved into a web application with a React Native read-only client, synchronization between the web application and the mobile side, assignment and module-oriented widgets, and a QR-based mechanism for connecting the app.
+It consists of the following features:
+- The web version comes with an extension that would scrape the quiz data and other material of study from a specific website that every engineering student has once opened in their life (PW). 
+- When I was learning I had different problems regarding the records being mantained of lectures and their scores in one place and overall analysis of my attempts, from the record system that was first maintained in the excel sheet I advanced it to this.
+- It consists of tracking of quizes, modules, assignments, pdfs and time bound practise module integrated in the web based extension that would also calculate and show you the "Master Score" on the basis of marks, progression, score etc.
+- The mobile app, Vinyas Sathi is a read-only client of the web application and can be used to access the data synced from the web application.
 
-The goal was never to build another generic productivity application.
-
-It was to build something that fit the workflow that created it.
-
-That distinction matters.
-
-A product built around a real inconvenience tends to accumulate features differently from a product built around a feature checklist. Each addition has to answer a question: does this actually make the system more useful?
 
 ## <span style="color:orange">The Constraint
 
@@ -54,13 +52,14 @@ MongoDB Atlas was not just a database sitting behind the application. Its limita
 
 Instead of treating those limits as something to ignore, the application had to become more deliberate about what it stored and how often it stored it.
 
-That is where engineering becomes different from simply making something work.
+The engineering methods that solved this problem:
+- **Data serialization and deserialization**: Instead of uploading each syllabus seperately I made a template that would load only the differences in the new data, this reduced heavy loads on database writing rewriting cycles. This made sure the application can handle 100s of users on 500 MB free MongoDB Atlas!
+- **Debouncing**: Vercel serveless functions have limits with time, this was a problem as in these kind of websites that data is send frequently, to solve this I made sure that the data is sent in batches and not all at once, this reduced the number of write cycles and made the application more efficient. 
+- **Personalized themes**: I introduced images to be as background themes that can be selected by the user, but saving an image on the little database was a problem, to solve this I introduced localStorage saving, that would save and render the image from browser, saving lots of space in the database.
 
-Making something work is the first milestone.
+...and more features you can read on my github. (Click the github icon below)
 
-Making it work inside constraints is where the interesting decisions begin.
-
-## <span style="color:orange">What Vinyas Taught Me</span>
+## <span style="color:orange">Conclusion: What Vinyas Taught Me</span>
 
 Vinyas taught me things that tutorials rarely communicate directly.
 
@@ -76,78 +75,6 @@ Even deployment itself became part of the project. Vinyas uses Vercel for the we
 
 The project became less about learning individual technologies and more about understanding how those technologies behave when they have to coexist.
 
-## <span style="color:orange">Analysis Without AI</span>
-
-One direction I deliberately kept separate from the core application was AI.
-
-There is a temptation to call every form of useful analysis "AI." Vinyas does not need that.
-
-Academic data already contains patterns that can be extracted algorithmically.
-
-Completion rates, workload distribution, assignment trends, module progress, consistency, and other derived metrics can be calculated from existing data without training a model or sending the data to an external AI service.
-
-That makes the analysis easier to understand, easier to debug, and more predictable.
-
-The principle is simple:
-
-> If a deterministic algorithm can answer the question, there is no reason to make it probabilistic.
-
-AI can be useful when the problem actually requires inference.
-
-Not every problem does.
-
-## <span style="color:orange">The Privacy Lesson</span>
-
-There was also a point where the project could have gone in a very different direction.
-
-A browser extension experiment was capable of observing activity beyond the application itself. It was technically interesting, but the fact that something *could* be logged did not mean it *should* be logged.
-
-That became an important distinction for Vinyas.
-
-Software has a strange ability to make surveillance feel like a feature.
-
-A developer can always justify collecting more information because that information might become useful later.
-
-I would rather ask the opposite question:
-
-**Do I actually need this information for the application to work?**
-
-If the answer is no, collecting it creates a liability without creating a corresponding necessity.
-
-## <span style="color:orange">From Personal Tool to Someone Else's Equipment</span>
-
-The most satisfying part of Vinyas is that it stopped being only mine.
-
-The original problem belonged to one student.
-
-The solution became something another person could use.
-
-That transformation is what makes the project meaningful to me. The Excel sheet was useful because it solved my problem. The application became useful when its design started making sense outside the exact circumstances in which it was created.
-
-A student difficulty transformed into someone else's equipment.
-
-That is a much more interesting definition of a project than "I built an app."
-
-## <span style="color:orange">Philosophy</span>
-
-Vinyas changed my understanding of what a project is.
-
-A project does not have to begin with a revolutionary idea. It can begin with an annoying spreadsheet.
-
-It does not need a huge team. It can begin with one person repeatedly asking, "Why am I doing this manually?"
-
-It does not need expensive infrastructure. Constraints can force better engineering decisions.
-
-And it does not need AI simply because AI exists.
-
-The important thing is the loop:
-
-**problem → solution → usage → failure → understanding → improvement.**
-
-Vinyas went through that loop repeatedly.
-
-If I had to describe the philosophy of Vinyas in one line, it would be:
-
-**Build the solution to the problem you actually have, then keep improving it until someone else can use it too.**
+The proudest thing for me in it is it is used by someone else too :)
 
 And finally test it yourself: [Vinyas](https://vinyas-one.vercel.app "Kind of not works on VIT Wifi :(") (Make sure you are not connected to an institution wifi, beacuse test servers like *.vercel.app gets blocked by FortiGuard.)
