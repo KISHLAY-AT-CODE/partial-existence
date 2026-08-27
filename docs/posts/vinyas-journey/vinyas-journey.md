@@ -4,7 +4,7 @@ title: "Vinyas : A Student Difficulty Transformed into Someone Else's Equipment"
 date: 2026-08-14
 tags: [blog, technology, vinyas, programming, student-project]
 github: "https://github.com/KISHLAY-AT-CODE"
-
+theme: "#FFA500"
 ---
 
 
