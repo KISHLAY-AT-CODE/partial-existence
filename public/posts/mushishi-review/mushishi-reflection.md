@@ -4,7 +4,8 @@ title: "Mushishi : The Haunting Calm"
 date: 2026-08-26
 tags: [blog, anime, mushishi, reflection]
 github: "https://github.com/KISHLAY-AT-CODE"
-
+allpoety: "https://allpoetry.com/partial-existence"
+theme: "#A6F527"
 ---
 
 # <span style="color:#A6F527">Mushishi</span> : The Haunting Calm

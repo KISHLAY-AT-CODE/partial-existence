@@ -94,7 +94,10 @@ export default function BlogPost({ slug }) {
         &larr; Back to blog
       </Link>
 
-      <header className="blog-post__header">
+      <header
+        className="blog-post__header"
+        style={meta.theme ? { '--post-theme': meta.theme } : undefined}
+      >
         <div className="blog-post__header-content">
           {formattedDate && (
             <time className="blog-post__date" dateTime={meta.date}>
@@ -114,8 +117,8 @@ export default function BlogPost({ slug }) {
         </div>
 
         {meta.icon && (
-          <div className="blog-post__icon-container" aria-hidden="true">
-            <img src={meta.icon} alt="" className="blog-post__icon" />
+          <div className="blog-post__bg-icon" aria-hidden="true">
+            <img src={meta.icon} alt="" className="blog-post__bg-icon-img" />
           </div>
         )}
       </header>

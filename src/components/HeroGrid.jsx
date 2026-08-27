@@ -202,23 +202,12 @@ export default function HeroGrid() {
         }
       }
 
-      // Smooth interconnected warp physics for text and background
-      const warpSpring = 0.08;
-      const warpDamp = 0.76;
-      const axW = (targetWarpX - warpX) * warpSpring;
-      const ayW = (targetWarpY - warpY) * warpSpring;
-      warpVx = (warpVx + axW) * warpDamp;
-      warpVy = (warpVy + ayW) * warpDamp;
-      warpX += warpVx;
-      warpY += warpVy;
-
+      // Clear text tilt distortion
       if (container) {
-        const rotX = (-warpY * 0.35).toFixed(2);
-        const rotY = (warpX * 0.35).toFixed(2);
-        container.style.setProperty('--grid-warp-x', `${warpX.toFixed(2)}px`);
-        container.style.setProperty('--grid-warp-y', `${warpY.toFixed(2)}px`);
-        container.style.setProperty('--grid-rot-x', `${rotX}deg`);
-        container.style.setProperty('--grid-rot-y', `${rotY}deg`);
+        container.style.setProperty('--grid-warp-x', '0px');
+        container.style.setProperty('--grid-warp-y', '0px');
+        container.style.setProperty('--grid-rot-x', '0deg');
+        container.style.setProperty('--grid-rot-y', '0deg');
       }
 
       ctx.clearRect(0, 0, width, height);
@@ -244,7 +233,7 @@ export default function HeroGrid() {
         return;
       }
 
-      // Subtle background distortion aura behind the grid (pure monochrome white/silver)
+      // Subtle background illumination behind the grid
       if (mouse.isHovered && mouse.x > 0 && mouse.y > 0) {
         const radialGlow = ctx.createRadialGradient(
           mouse.x,
@@ -263,56 +252,39 @@ export default function HeroGrid() {
         ctx.fill();
       }
 
-      const SPRING_K = 0.085;
-      const DAMPING = 0.78;
-      const PUSH_FORCE = 15;
-
-      // Update grid points with physics
+      // Update grid points — keep straight at base positions (no warping)
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const p = points[r][c];
+          p.x = p.baseX;
+          p.y = p.baseY;
 
-          // Elastic spring towards base position
-          const ax = (p.baseX - p.x) * SPRING_K;
-          const ay = (p.baseY - p.y) * SPRING_K;
-
-          p.vx = (p.vx + ax) * DAMPING;
-          p.vy = (p.vy + ay) * DAMPING;
-
-          // Mouse interaction
+          // Mouse illumination energy (no physical displacement)
           let mouseInfluence = 0;
           if (mouse.isHovered) {
-            const dx = p.x - mouse.x;
-            const dy = p.y - mouse.y;
+            const dx = p.baseX - mouse.x;
+            const dy = p.baseY - mouse.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < mouse.radius && dist > 0) {
               mouseInfluence = 1 - dist / mouse.radius;
-              const force = mouseInfluence * mouseInfluence * PUSH_FORCE;
-              p.vx += (dx / dist) * force * 0.14;
-              p.vy += (dy / dist) * force * 0.14;
             }
           }
 
-          // Ripple shockwave interaction on grid points
+          // Ripple shockwave illumination
           for (let k = 0; k < ripples.length; k++) {
             const rip = ripples[k];
-            const dx = p.x - rip.x;
-            const dy = p.y - rip.y;
+            const dx = p.baseX - rip.x;
+            const dy = p.baseY - rip.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             const diff = Math.abs(dist - rip.radius);
             if (diff < 40 && dist > 0) {
               const ripInf = (1 - diff / 40) * rip.strength;
-              p.vx += (dx / dist) * ripInf * 12;
-              p.vy += (dy / dist) * ripInf * 12;
               mouseInfluence = Math.max(mouseInfluence, ripInf * 0.8);
             }
           }
 
           p.energy += (mouseInfluence - p.energy) * 0.14;
-
-          p.x += p.vx;
-          p.y += p.vy;
         }
       }
 

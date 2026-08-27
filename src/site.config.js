@@ -18,7 +18,7 @@ export const siteConfig = {
     titleAccent: 'I?',
     subtitle:
       'Hello! Kishlay here, I share my reflections on programming, life, entertainment, books and the quiet discipline of building things that matter — written from the liminal space between intrusion and silence.',
-    sectionTitle: 'Blog',
+    sectionTitle: 'Blogs',
   },
 
   // Navigation Bar Links (leave empty if no additional links needed)

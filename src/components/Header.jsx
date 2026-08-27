@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import HeaderGrid from './HeaderGrid';
 import { siteConfig } from '../site.config';
 
 /**
@@ -15,7 +16,7 @@ const PARTIAL_STATES = [
 ];
 
 /**
- * Header — Centered site branding with animated partial morph and navigation links
+ * Header — Centered site branding with animated partial morph, background warped grid lines, and navigation links
  */
 export default function Header() {
   const location = useLocation();
@@ -38,6 +39,9 @@ export default function Header() {
 
   return (
     <header className="header" id="site-header">
+      {/* White grid lines spanning full header with bend & dark void behind Partial Existence */}
+      <HeaderGrid />
+
       <div className="header__inner">
         <div className="header__brand">
           <h1 className="header__title">

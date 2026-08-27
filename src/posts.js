@@ -160,6 +160,9 @@ export function parseMarkdownPost(content, filePath = '') {
     }
   }
 
+  // Custom post theme color (hex, rgb, hsl, or CSS color name) for hover glows
+  let theme = meta.theme ? String(meta.theme).trim() : '';
+
   return {
     slug,
     title,
@@ -168,6 +171,7 @@ export function parseMarkdownPost(content, filePath = '') {
     excerpt,
     icon,
     background,
+    theme,
     github,
     allpoetry,
     body,
@@ -181,6 +185,7 @@ export function parseMarkdownPost(content, filePath = '') {
       excerpt,
       icon,
       background,
+      theme,
       github,
       allpoetry,
       slug,
