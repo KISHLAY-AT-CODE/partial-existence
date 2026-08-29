@@ -22,8 +22,8 @@ export const theme = {
     warm: '#e0f08a',
   },
   fonts: {
-    heading: "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif",
-    body: "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif",
+    heading: "'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif",
+    body: "'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif",
     mono: "'JetBrains Mono', 'Fira Code', monospace",
   },
 };

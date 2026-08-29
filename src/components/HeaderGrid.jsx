@@ -71,6 +71,10 @@ export default function HeaderGrid() {
 
     resize();
 
+    // Smooth dynamic void boundaries
+    let currentLeftVoid = -1000;
+    let currentRightVoid = 10000;
+
     function render() {
       // Smooth mouse easing
       mouse.x += (mouse.targetX - mouse.x) * 0.15;
@@ -78,38 +82,63 @@ export default function HeaderGrid() {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Dynamically locate the center of the branding title
-      const brandEl = canvas.parentElement?.querySelector('.header__brand');
-      let centerX = width / 2;
+      // Dynamically locate boundaries of the complete Partial Existence branding + Search button row
+      const canvasRect = canvas.getBoundingClientRect();
+      const brandRowEl = canvas.parentElement?.querySelector('.header__brand-row');
+      const partialSlotEl = canvas.parentElement?.querySelector('.header__partial-slot');
+      const searchBtnEl = canvas.parentElement?.querySelector('.header__search-btn');
 
-      if (brandEl) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const brandRect = brandEl.getBoundingClientRect();
-        if (brandRect.width > 0) {
-          centerX = brandRect.left + brandRect.width / 2 - canvasRect.left;
+      let targetLeftVoid = width / 2 - 190;
+      let targetRightVoid = width / 2 + 190;
+
+      if (canvasRect.width > 0) {
+        if (brandRowEl) {
+          const bRect = brandRowEl.getBoundingClientRect();
+          if (bRect.width > 0) {
+            targetLeftVoid = bRect.left - canvasRect.left - 24; // Clear void on left of Partial
+            targetRightVoid = bRect.right - canvasRect.left + 24; // Clear void past search button
+          }
+        } else {
+          if (partialSlotEl) {
+            const pRect = partialSlotEl.getBoundingClientRect();
+            if (pRect.width > 0) {
+              targetLeftVoid = pRect.left - canvasRect.left - 24;
+            }
+          }
+          if (searchBtnEl) {
+            const sRect = searchBtnEl.getBoundingClientRect();
+            if (sRect.width > 0) {
+              targetRightVoid = sRect.right - canvasRect.left + 24;
+            }
+          }
         }
       }
 
+      if (currentLeftVoid === -1000) {
+        currentLeftVoid = targetLeftVoid;
+        currentRightVoid = targetRightVoid;
+      } else {
+        currentLeftVoid += (targetLeftVoid - currentLeftVoid) * 0.18;
+        currentRightVoid += (targetRightVoid - currentRightVoid) * 0.18;
+      }
+
+      const leftVoidEdge = currentLeftVoid;
+      const rightVoidEdge = currentRightVoid;
+
       // Square grid matching HeroGrid (38px x 38px)
       const CELL_SIZE = 38;
-
-      // Clear center zone around Partial Existence (no grid lines in middle)
-      const voidHalfWidth = Math.min(220, width * 0.28); // Width of completely clear zone from center
-      const fadeTransitionWidth = 90; // Distance over which lines smoothly fade in/out
-
-      const leftVoidEdge = centerX - voidHalfWidth;
-      const rightVoidEdge = centerX + voidHalfWidth;
+      const fadeTransitionWidth = 32; // Crisp, subtle transition into void
 
       ctx.lineWidth = 1;
 
       // Helper function to calculate clean opacity for any X position
       function getXAlpha(x) {
-        // 1. Completely clear in middle
+        // 1. Completely clear in void (covering active Partial, Existence, and Search Button)
         if (x > leftVoidEdge && x < rightVoidEdge) {
           return 0;
         }
 
-        // 2. Smooth fade toward center void
+        // 2. Smooth fade toward void edges
         let centerFade = 1;
         if (x <= leftVoidEdge) {
           centerFade = Math.max(0, Math.min(1, (leftVoidEdge - x) / fadeTransitionWidth));
@@ -119,19 +148,19 @@ export default function HeaderGrid() {
 
         // 3. Smooth fade-in from screen outer left & right edges
         const distFromScreenEdge = Math.min(x, width - x);
-        const edgeFade = Math.max(0, Math.min(1, distFromScreenEdge / 120));
+        const edgeFade = Math.max(0, Math.min(1, distFromScreenEdge / 60));
 
         return centerFade * edgeFade * 0.32;
       }
 
-      // 1. Draw Straight Vertical Grid Lines on the sides
+      // 1. Draw Straight Vertical Grid Lines (showing grid where Partial is not present)
       const numCols = Math.ceil(width / CELL_SIZE) + 2;
       const startX = (width % CELL_SIZE) / 2;
 
       for (let c = -1; c <= numCols; c++) {
         const x = startX + c * CELL_SIZE;
 
-        // Skip lines that fall inside the clear middle zone
+        // Skip lines that fall inside the clear void zone
         if (x >= leftVoidEdge && x <= rightVoidEdge) continue;
 
         let alpha = getXAlpha(x);
@@ -156,12 +185,12 @@ export default function HeaderGrid() {
       const numRows = Math.ceil(height / CELL_SIZE) + 2;
       const startY = (height % CELL_SIZE) / 2;
 
-      // Left wing horizontal gradient (fades in from left edge, fades out at left void edge)
+      // Left wing horizontal gradient (fades in from left edge, extends right up to leftVoidEdge)
       if (leftVoidEdge > 0) {
         const leftGrad = ctx.createLinearGradient(0, 0, leftVoidEdge, 0);
         leftGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        leftGrad.addColorStop(0.2, 'rgba(255, 255, 255, 0.28)');
-        leftGrad.addColorStop(0.65, 'rgba(255, 255, 255, 0.28)');
+        leftGrad.addColorStop(0.12, 'rgba(255, 255, 255, 0.28)');
+        leftGrad.addColorStop(0.88, 'rgba(255, 255, 255, 0.28)');
         leftGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
         for (let r = -1; r <= numRows; r++) {
@@ -174,12 +203,12 @@ export default function HeaderGrid() {
         }
       }
 
-      // Right wing horizontal gradient (fades in from right void edge, fades out at right edge)
+      // Right wing horizontal gradient (starts after rightVoidEdge past search button)
       if (rightVoidEdge < width) {
         const rightGrad = ctx.createLinearGradient(rightVoidEdge, 0, width, 0);
         rightGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        rightGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.28)');
-        rightGrad.addColorStop(0.8, 'rgba(255, 255, 255, 0.28)');
+        rightGrad.addColorStop(0.14, 'rgba(255, 255, 255, 0.28)');
+        rightGrad.addColorStop(0.88, 'rgba(255, 255, 255, 0.28)');
         rightGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
         for (let r = -1; r <= numRows; r++) {

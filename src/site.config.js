@@ -34,6 +34,8 @@ export const siteConfig = {
   // Social Defaults (can be overridden or toggled per post in frontmatter)
   social: {
     github: 'https://github.com/KISHLAY-AT-CODE',
+    linkedin: 'https://www.linkedin.com',
+    youtube: 'https://www.youtube.com',
     allpoetry: 'https://allpoetry.com/partial-existence',
   },
 };
