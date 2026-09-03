@@ -41,7 +41,7 @@ export const siteConfig = {
 
   // Backend API URL (Cloudflare Pages deployment URL or custom domain)
   // Example: 'https://partial-existence-backend.pages.dev' (or leave '' to use VITE_API_URL / localStorage)
-  apiUrl: '',
+  apiUrl: 'https://partial-existence.pages.dev',
 
   // Multi-Tenant SaaS Blog Website Identifier
   websiteId: 'partial-existence',
