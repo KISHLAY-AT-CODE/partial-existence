@@ -38,5 +38,15 @@ export const siteConfig = {
     youtube: 'https://www.youtube.com',
     allpoetry: 'https://allpoetry.com/partial-existence',
   },
+
+  // Backend API URL (Cloudflare Pages deployment URL or custom domain)
+  // Example: 'https://partial-existence-backend.pages.dev' (or leave '' to use VITE_API_URL / localStorage)
+  apiUrl: '',
+
+  // Multi-Tenant SaaS Blog Website Identifier
+  websiteId: 'partial-existence',
+
+  // Google reCAPTCHA v2 / Checkbox Site Key (public)
+  recaptchaSiteKey: '6Le2GZ8tAAAAACYe_3v7quzqVz_FKgv-HVM9o8FK',
 };
 

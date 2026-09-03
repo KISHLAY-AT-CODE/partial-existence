@@ -1,19 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { getLikes, toggleLike, getComments, postComment, deleteComment, getPageViews, recordPageView } from '../api';
+import { getSavedAuthorName, saveAuthorName, hasViewedPostCookie, markPostViewedCookie } from '../cookies';
+import { useAuth } from '../context/AuthContext';
+import ReCaptcha from './ReCaptcha';
 
 /**
- * PostInteractions — Like button, comment section, and toggleable
- * GitHub & AllPoetry social link widgets for blog posts.
+ * PostInteractions — Like button, comment section, view counter (deduplicated by device),
+ * and toggleable GitHub & AllPoetry social link widgets for blog posts.
  */
 export default function PostInteractions({ slug, github, allpoetry }) {
+  const { user, isAuthenticated, openAuthModal } = useAuth();
+
   const likeKey = `pe_likes_${slug}`;
   const commentKey = `pe_comments_${slug}`;
+  const viewKey = `pe_views_${slug}`;
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [viewCount, setViewCount] = useState(0);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [authorName, setAuthorName] = useState('');
+  const [authorName, setAuthorName] = useState(() => getSavedAuthorName());
+  const [authorEmail, setAuthorEmail] = useState(() => {
+    try {
+      return localStorage.getItem('pe_author_email') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [subscribeUpdates, setSubscribeUpdates] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
+  const recaptchaRef = useRef(null);
+
+  // Track comments authored by this user locally
+  const [myCommentIds, setMyCommentIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pe_my_comments');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Social cards toggle states
   const [showGithubCard, setShowGithubCard] = useState(false);
@@ -21,8 +51,11 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   const [githubCopied, setGithubCopied] = useState(false);
   const [allpoetryCopied, setAllpoetryCopied] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage & sync with SaaS backend on mount
   useEffect(() => {
+    let isMounted = true;
+
+    // 1. Instant local load
     try {
       const storedLikes = localStorage.getItem(likeKey);
       if (storedLikes) {
@@ -31,66 +64,247 @@ export default function PostInteractions({ slug, github, allpoetry }) {
         setLikeCount(parsed.count || 0);
       }
 
+      const storedViews = localStorage.getItem(viewKey);
+      if (storedViews) {
+        setViewCount(Number(storedViews) || 0);
+      }
+
       const storedComments = localStorage.getItem(commentKey);
       if (storedComments) {
         setComments(JSON.parse(storedComments));
       }
 
-      const savedName = localStorage.getItem('pe_author_name');
+      const savedName = getSavedAuthorName();
       if (savedName) {
         setAuthorName(savedName);
       }
     } catch {
       // Ignore localStorage errors
     }
-  }, [likeKey, commentKey]);
 
-  function handleLike() {
+    // 2. Background cloud sync + Unique Device View Count Deduplication
+    async function syncCloud() {
+      try {
+        // Only record pageview once per device; otherwise fetch view count
+        const isViewed = hasViewedPostCookie(slug);
+        const viewPromise = isViewed ? getPageViews(slug) : recordPageView(slug);
+
+        const [likesRes, commentsRes, viewsRes] = await Promise.all([
+          getLikes(slug),
+          getComments(slug),
+          viewPromise,
+        ]);
+
+        if (!isMounted) return;
+
+        if (!isViewed && viewsRes) {
+          markPostViewedCookie(slug);
+        }
+
+        if (likesRes && typeof likesRes.likes === 'number') {
+          setLikeCount(likesRes.likes);
+          try {
+            const existing = JSON.parse(localStorage.getItem(likeKey) || '{}');
+            localStorage.setItem(
+              likeKey,
+              JSON.stringify({ ...existing, count: likesRes.likes })
+            );
+          } catch {
+            // Ignore
+          }
+        }
+
+        if (viewsRes && typeof viewsRes.views === 'number') {
+          setViewCount(viewsRes.views);
+          try {
+            localStorage.setItem(viewKey, String(viewsRes.views));
+          } catch {
+            // Ignore
+          }
+        }
+
+        if (commentsRes && Array.isArray(commentsRes.comments)) {
+          setComments(commentsRes.comments);
+          try {
+            localStorage.setItem(commentKey, JSON.stringify(commentsRes.comments));
+          } catch {
+            // Ignore
+          }
+        }
+      } catch {
+        // Fallback silently to local state
+      }
+    }
+
+    syncCloud();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, likeKey, commentKey, viewKey]);
+
+  async function handleLike() {
     const newLiked = !liked;
     const newCount = newLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
     setLiked(newLiked);
     setLikeCount(newCount);
+
     try {
       localStorage.setItem(likeKey, JSON.stringify({ liked: newLiked, count: newCount }));
     } catch {
       // Ignore
     }
+
+    // Sync to backend
+    try {
+      const res = await toggleLike(slug, newLiked);
+      if (res && typeof res.likes === 'number') {
+        setLikeCount(res.likes);
+      }
+    } catch {
+      // Keep optimistic local count
+    }
   }
 
-  function handleSubmitComment(e) {
+  async function handleSubmitComment(e) {
     e.preventDefault();
     const trimmed = commentText.trim();
-    if (!trimmed) return;
+    if (!trimmed || submitting) return;
 
-    const name = authorName.trim() || 'Anonymous';
+    // reCAPTCHA required only for non-authenticated guests
+    if (!isAuthenticated && !recaptchaToken) {
+      setCaptchaError('Please complete the reCAPTCHA verification.');
+      return;
+    }
+
+    const name = isAuthenticated && user ? user.name : (authorName.trim() || 'Anonymous');
+    const email = isAuthenticated && user ? user.email : authorEmail.trim();
+    const tempId = `cmt_${Date.now()}`;
+
     const newComment = {
-      id: Date.now().toString(),
+      id: tempId,
+      slug,
+      userId: user?.id || null,
       author: name,
+      isVerified: Boolean(isAuthenticated),
+      emailHash: null,
+      subscribeUpdates,
       text: trimmed,
       date: new Date().toISOString(),
     };
 
+    const previousComments = [...comments];
     const updated = [newComment, ...comments];
     setComments(updated);
     setCommentText('');
+    setSubmitting(true);
+    setCaptchaError('');
+
+    // Optimistically record ownership
+    setMyCommentIds((prev) => {
+      const next = [...prev, tempId];
+      try {
+        localStorage.setItem('pe_my_comments', JSON.stringify(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
 
     try {
       localStorage.setItem(commentKey, JSON.stringify(updated));
-      if (authorName.trim()) {
-        localStorage.setItem('pe_author_name', authorName.trim());
+      if (!isAuthenticated) {
+        saveAuthorName(authorName);
+        if (email) {
+          localStorage.setItem('pe_author_email', email);
+        }
       }
     } catch {
       // Ignore
     }
+
+    // Sync to backend
+    try {
+      const res = await postComment(
+        slug,
+        name,
+        trimmed,
+        isAuthenticated ? null : recaptchaToken,
+        email || null,
+        subscribeUpdates
+      );
+
+      if (res && res.success === false) {
+        // Rollback optimistic comment on failure
+        setComments(previousComments);
+        setCaptchaError(res.error || 'Failed to post comment. Please try again.');
+        recaptchaRef.current?.reset();
+        setRecaptchaToken('');
+      } else if (res && res.comment) {
+        const serverId = res.comment.id;
+        setComments((prev) =>
+          prev.map((c) => (c.id === tempId ? res.comment : c))
+        );
+        if (serverId && serverId !== tempId) {
+          setMyCommentIds((prev) => {
+            const next = prev.map((id) => (id === tempId ? serverId : id));
+            try {
+              localStorage.setItem('pe_my_comments', JSON.stringify(next));
+            } catch {
+              // Ignore
+            }
+            return next;
+          });
+        }
+        // Reset captcha for next comment
+        recaptchaRef.current?.reset();
+        setRecaptchaToken('');
+      }
+    } catch {
+      // Retain optimistic comment
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  function handleDeleteComment(commentId) {
+  async function handleDeleteComment(commentId) {
+    const isLocalOwner = myCommentIds.includes(commentId);
+    const isUserOwner = user && comments.some((c) => c.id === commentId && c.userId === user.id);
+
+    if (!isLocalOwner && !isUserOwner) {
+      return;
+    }
+
+    const previousComments = [...comments];
     const updated = comments.filter((c) => c.id !== commentId);
     setComments(updated);
+
     try {
       localStorage.setItem(commentKey, JSON.stringify(updated));
     } catch {
       // Ignore
+    }
+
+    // Sync deletion to backend
+    try {
+      const res = await deleteComment(commentId);
+      if (res && res.success === false) {
+        // Rollback if unauthorized on server
+        setComments(previousComments);
+        console.error('[Delete comment error]:', res.error);
+      } else {
+        setMyCommentIds((prev) => {
+          const next = prev.filter((id) => id !== commentId);
+          try {
+            localStorage.setItem('pe_my_comments', JSON.stringify(next));
+          } catch {
+            // Ignore
+          }
+          return next;
+        });
+      }
+    } catch {
+      // Retain local deletion
     }
   }
 
@@ -160,6 +374,31 @@ export default function PostInteractions({ slug, github, allpoetry }) {
           <span className="interactions__comment-icon">💬</span>
           <span className="interactions__comment-count">{comments.length}</span>
         </button>
+
+        {/* Unique Views Counter (Device-Deduplicated) */}
+        <div
+          className="interactions__btn interactions__view-counter"
+          aria-label={`${viewCount} unique views`}
+          title={`${viewCount} unique views (prevented redundant refresh views)`}
+          id={`view-count-${slug}`}
+        >
+          <svg
+            className="interactions__btn-svg interactions__view-svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span className="interactions__view-count">{viewCount}</span>
+        </div>
 
         {/* GitHub Toggle Button (shown if post has github link) */}
         {github && (
@@ -353,54 +592,157 @@ export default function PostInteractions({ slug, github, allpoetry }) {
 
           {/* Comment Form */}
           <form className="interactions__form" onSubmit={handleSubmitComment}>
-            <input
-              type="text"
-              className="interactions__input interactions__input--name"
-              placeholder="Your name (optional)"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              maxLength={50}
-              id={`comment-name-${slug}`}
-            />
+            {isAuthenticated && user ? (
+              <div className="interactions__auth-banner">
+                <span className="interactions__auth-avatar">
+                  {(user.name || 'U')[0].toUpperCase()}
+                </span>
+                <div className="interactions__auth-info">
+                  <span className="interactions__auth-name">
+                    Commenting as <strong>{user.name}</strong>
+                  </span>
+                  <span className="interactions__auth-verified">✓ Verified Account</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="interactions__guest-prompt">
+                  <span>Want a verified author badge?</span>
+                  <button
+                    type="button"
+                    className="interactions__prompt-signin"
+                    onClick={() => openAuthModal('login')}
+                  >
+                    Sign In
+                  </button>
+                </div>
+
+                <div className="interactions__form-row">
+                  <input
+                    type="text"
+                    className="interactions__input interactions__input--name"
+                    placeholder="Your name (optional)"
+                    value={authorName}
+                    onChange={(e) => setAuthorName(e.target.value)}
+                    maxLength={50}
+                    id={`comment-name-${slug}`}
+                  />
+                  <input
+                    type="email"
+                    className="interactions__input interactions__input--email"
+                    placeholder="Your email (optional)"
+                    value={authorEmail}
+                    onChange={(e) => setAuthorEmail(e.target.value)}
+                    maxLength={100}
+                    id={`comment-email-${slug}`}
+                  />
+                </div>
+              </>
+            )}
+
             <textarea
               className="interactions__input interactions__input--text"
-              placeholder="Write a comment..."
+              placeholder={isAuthenticated ? `Share your reflections, ${user.name}...` : 'Write a comment...'}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               maxLength={1000}
               rows={3}
               id={`comment-text-${slug}`}
             />
+
+            {/* Email Subscription Opt-in */}
+            <label className="interactions__subscribe-toggle" htmlFor={`comment-subscribe-${slug}`}>
+              <input
+                type="checkbox"
+                id={`comment-subscribe-${slug}`}
+                className="interactions__checkbox"
+                checked={subscribeUpdates}
+                onChange={(e) => setSubscribeUpdates(e.target.checked)}
+              />
+              <span className="interactions__checkbox-custom" />
+              <span className="interactions__subscribe-text">
+                Notify me of new blog updates via email
+              </span>
+            </label>
+
+            {/* Google reCAPTCHA v2 Widget (Guest Only) */}
+            {!isAuthenticated && (
+              <ReCaptcha
+                onVerify={(token) => {
+                  setRecaptchaToken(token);
+                  setCaptchaError('');
+                }}
+                onExpired={() => {
+                  setRecaptchaToken('');
+                }}
+                resetRef={recaptchaRef}
+              />
+            )}
+
+            {captchaError && (
+              <div className="interactions__captcha-error" id={`captcha-error-${slug}`}>
+                ⚠️ {captchaError}
+              </div>
+            )}
+
             <button
               type="submit"
               className="interactions__submit"
-              disabled={!commentText.trim()}
+              disabled={!commentText.trim() || (!isAuthenticated && !recaptchaToken) || submitting}
               id={`comment-submit-${slug}`}
             >
-              Post Comment
+              {submitting ? 'Posting...' : 'Post Comment'}
             </button>
           </form>
 
           {/* Comment List */}
           {comments.length > 0 && (
             <div className="interactions__comment-list">
-              {comments.map((comment) => (
-                <div key={comment.id} className="interactions__comment" id={`comment-${comment.id}`}>
-                  <div className="interactions__comment-header">
-                    <span className="interactions__comment-author">{comment.author}</span>
-                    <span className="interactions__comment-date">{formatDate(comment.date)}</span>
-                    <button
-                      className="interactions__comment-delete"
-                      onClick={() => handleDeleteComment(comment.id)}
-                      aria-label="Delete comment"
-                      title="Delete comment"
-                    >
-                      ×
-                    </button>
+              {comments.map((comment) => {
+                const isLocalOwner = myCommentIds.includes(comment.id);
+                const isUserOwner = user && comment.userId === user.id;
+                const canDelete = isLocalOwner || isUserOwner;
+
+                return (
+                  <div key={comment.id} className="interactions__comment" id={`comment-${comment.id}`}>
+                    <div className="interactions__comment-header">
+                      <div className="interactions__comment-user-info">
+                        <span className="interactions__comment-avatar" aria-hidden="true">
+                          {(comment.author || 'A')[0].toUpperCase()}
+                        </span>
+                        <span className="interactions__comment-author">
+                          {comment.author}
+                          {comment.isVerified && (
+                            <span className="interactions__verified-badge" title="Verified registered author">
+                              ✓ Verified
+                            </span>
+                          )}
+                          {canDelete && <span className="interactions__comment-you">You</span>}
+                          {comment.subscribeUpdates && (
+                            <span className="interactions__comment-badge" title="Subscribed to blog updates">
+                              ✉ Subscribed
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="interactions__comment-meta">
+                        <span className="interactions__comment-date">{formatDate(comment.date)}</span>
+                        {canDelete && (
+                          <button
+                            className="interactions__comment-delete"
+                            onClick={() => handleDeleteComment(comment.id)}
+                            aria-label="Delete your comment"
+                            title="Delete your comment"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="interactions__comment-text">{comment.text}</p>
                   </div>
-                  <p className="interactions__comment-text">{comment.text}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -414,4 +756,3 @@ export default function PostInteractions({ slug, github, allpoetry }) {
     </div>
   );
 }
-

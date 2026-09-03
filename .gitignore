@@ -40,3 +40,4 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+partial-existence-backend/

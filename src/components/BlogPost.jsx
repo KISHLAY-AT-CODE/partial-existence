@@ -4,6 +4,9 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import PostInteractions from './PostInteractions';
 import { getPostBySlug } from '../posts';
+import { recordPageView } from '../api';
+
+import { hasViewedPostCookie, markPostViewedCookie } from '../cookies';
 
 /**
  * BlogPost — Full blog post renderer.
@@ -18,15 +21,34 @@ export default function BlogPost({ slug }) {
   const meta = post?.meta || {};
   const body = post?.body || '';
 
+  // Record unique pageview when visitor views the post
+  useEffect(() => {
+    if (slug && !hasViewedPostCookie(slug)) {
+      recordPageView(slug);
+      markPostViewedCookie(slug);
+    }
+  }, [slug]);
+
   // Dynamic custom background support (reverts to default when unmounting)
   useEffect(() => {
+    const basePath = import.meta.env.BASE_URL || '/';
     if (meta.background) {
-      document.documentElement.style.setProperty('--bg-image', `url("${meta.background}")`);
+      let bgUrl = meta.background;
+      if (!bgUrl.startsWith('http://') && !bgUrl.startsWith('https://') && !bgUrl.startsWith('data:')) {
+        if (bgUrl.startsWith('/')) {
+          bgUrl = `${basePath}${bgUrl.slice(1)}`;
+        } else {
+          bgUrl = `${basePath}posts/${slug}/${bgUrl.replace(/^\.\//, '')}`;
+        }
+      }
+      document.documentElement.style.setProperty('--bg-image', `url("${bgUrl}")`);
+    } else {
+      document.documentElement.style.setProperty('--bg-image', `url("${basePath}mushishi-bg.jpg")`);
     }
     return () => {
-      document.documentElement.style.removeProperty('--bg-image');
+      document.documentElement.style.setProperty('--bg-image', `url("${basePath}mushishi-bg.jpg")`);
     };
-  }, [meta.background]);
+  }, [meta.background, slug]);
 
   if (!post) {
     return (
