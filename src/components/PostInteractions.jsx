@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getLikes, toggleLike, getComments, postComment, deleteComment, getPageViews, recordPageView } from '../api';
 import { getSavedAuthorName, saveAuthorName, hasViewedPostCookie, markPostViewedCookie } from '../cookies';
 import { useAuth } from '../context/AuthContext';
+import { siteConfig } from '../site.config';
 import ReCaptcha from './ReCaptcha';
 
 /**
