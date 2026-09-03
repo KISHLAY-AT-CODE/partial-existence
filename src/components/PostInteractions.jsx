@@ -224,41 +224,31 @@ export default function PostInteractions({ slug, github, allpoetry }) {
     try {
       const res = await postComment(
         slug,
-        name,
+        authorDisplayName,
         trimmed,
-        isAuthenticated ? null : recaptchaToken,
-        email || null,
+        null,
+        user?.email || null,
         subscribeUpdates
       );
 
       if (res && res.success === false) {
         // Rollback optimistic comment on failure
         setComments(previousComments);
-        setCaptchaError(res.error || 'Failed to post comment. Please try again.');
-        recaptchaRef.current?.reset();
-        setRecaptchaToken('');
+        alert(res.error || 'Failed to post comment. Please try again.');
       } else if (res && res.comment) {
-        const serverId = res.comment.id;
+        const serverComment = res.comment;
         setComments((prev) =>
-          prev.map((c) => (c.id === tempId ? res.comment : c))
+          prev.map((c) => (c.id === tempId ? serverComment : c))
         );
-        if (serverId && serverId !== tempId) {
-          setMyCommentIds((prev) => {
-            const next = prev.map((id) => (id === tempId ? serverId : id));
-            try {
-              localStorage.setItem('pe_my_comments', JSON.stringify(next));
-            } catch {
-              // Ignore
-            }
-            return next;
-          });
+        try {
+          const finalComments = updated.map((c) => (c.id === tempId ? serverComment : c));
+          localStorage.setItem(commentKey, JSON.stringify(finalComments));
+        } catch {
+          // Ignore
         }
-        // Reset captcha for next comment
-        recaptchaRef.current?.reset();
-        setRecaptchaToken('');
       }
-    } catch {
-      // Retain optimistic comment
+    } catch (err) {
+      console.error('[Comment submission error]:', err);
     } finally {
       setSubmitting(false);
     }

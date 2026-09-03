@@ -75,6 +75,57 @@ export default function Header() {
         {/* White grid lines spanning full header with bend & dark void behind Partial Existence */}
         <HeaderGrid />
 
+        {/* Extreme Top Right Bar: Sign In & User Profile */}
+        <div className="header__top-right-bar">
+          {isAuthenticated && user ? (
+            <div className="header__user-menu" ref={userMenuRef}>
+              <button
+                type="button"
+                className="header__user-btn"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                aria-expanded={isUserMenuOpen}
+                title={`${user.name} (${user.email})`}
+                id="header-user-btn"
+              >
+                <span className="header__user-avatar">
+                  {(user.name || 'U')[0].toUpperCase()}
+                </span>
+                <span className="header__user-name">{user.name}</span>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="header__user-dropdown">
+                  <div className="header__user-dropdown-header">
+                    <p className="header__user-dropdown-name">{user.name}</p>
+                    <p className="header__user-dropdown-email">{user.email}</p>
+                    <span className="header__user-dropdown-badge">✓ Verified Account</span>
+                  </div>
+                  <div className="header__user-dropdown-divider" />
+                  <button
+                    type="button"
+                    className="header__user-dropdown-item header__user-dropdown-logout"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="header__auth-btn"
+              onClick={() => openAuthModal('login')}
+              id="header-auth-btn"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
+
         <div className="header__inner">
           <div className="header__brand-row">
             <div className="header__brand">
@@ -94,82 +145,31 @@ export default function Header() {
               </h1>
             </div>
 
-            <div className="header__actions-group">
-              {/* Round Search Button */}
-              <button
-                type="button"
-                className="header__search-btn"
-                onClick={() => setIsSearchOpen(true)}
-                title="Search blog posts (Ctrl+K or /)"
-                aria-label="Open search dialog"
-                id="header-search-btn"
+            {/* Round Search Button */}
+            <button
+              type="button"
+              className="header__search-btn"
+              onClick={() => setIsSearchOpen(true)}
+              title="Search blog posts (Ctrl+K or /)"
+              aria-label="Open search dialog"
+              id="header-search-btn"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="header__search-icon"
+                aria-hidden="true"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="header__search-icon"
-                  aria-hidden="true"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </button>
-
-              {/* User Auth Controls */}
-              {isAuthenticated && user ? (
-                <div className="header__user-menu" ref={userMenuRef}>
-                  <button
-                    type="button"
-                    className="header__user-btn"
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    aria-expanded={isUserMenuOpen}
-                    title={`${user.name} (${user.email})`}
-                    id="header-user-btn"
-                  >
-                    <span className="header__user-avatar">
-                      {(user.name || 'U')[0].toUpperCase()}
-                    </span>
-                    <span className="header__user-name">{user.name}</span>
-                  </button>
-
-                  {isUserMenuOpen && (
-                    <div className="header__user-dropdown">
-                      <div className="header__user-dropdown-header">
-                        <p className="header__user-dropdown-name">{user.name}</p>
-                        <p className="header__user-dropdown-email">{user.email}</p>
-                        <span className="header__user-dropdown-badge">✓ Verified Account</span>
-                      </div>
-                      <div className="header__user-dropdown-divider" />
-                      <button
-                        type="button"
-                        className="header__user-dropdown-item header__user-dropdown-logout"
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          logout();
-                        }}
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="header__auth-btn"
-                  onClick={() => openAuthModal('login')}
-                  id="header-auth-btn"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
           </div>
 
           {siteConfig.nav && siteConfig.nav.length > 0 && (
