@@ -168,25 +168,23 @@ export default function PostInteractions({ slug, github, allpoetry }) {
 
   async function handleSubmitComment(e) {
     e.preventDefault();
-    const trimmed = commentText.trim();
-    if (!trimmed || submitting) return;
-
-    // reCAPTCHA required only for non-authenticated guests
-    if (!isAuthenticated && !recaptchaToken) {
-      setCaptchaError('Please complete the reCAPTCHA verification.');
+    if (!isAuthenticated) {
+      openAuthModal('login');
       return;
     }
 
-    const name = isAuthenticated && user ? user.name : (authorName.trim() || 'Anonymous');
-    const email = isAuthenticated && user ? user.email : authorEmail.trim();
-    const tempId = `cmt_${Date.now()}`;
+    const trimmed = commentText.trim();
+    if (!trimmed) return;
+
+    const tempId = `cmt_${Date.now()}_local`;
+    const authorDisplayName = user?.name || 'Anonymous';
 
     const newComment = {
       id: tempId,
       slug,
       userId: user?.id || null,
-      author: name,
-      isVerified: Boolean(isAuthenticated),
+      author: authorDisplayName,
+      isVerified: true,
       emailHash: null,
       subscribeUpdates,
       text: trimmed,
@@ -198,7 +196,6 @@ export default function PostInteractions({ slug, github, allpoetry }) {
     setComments(updated);
     setCommentText('');
     setSubmitting(true);
-    setCaptchaError('');
 
     // Optimistically record ownership
     setMyCommentIds((prev) => {
@@ -590,110 +587,82 @@ export default function PostInteractions({ slug, github, allpoetry }) {
             Comments ({comments.length})
           </h4>
 
-          {/* Comment Form */}
-          <form className="interactions__form" onSubmit={handleSubmitComment}>
-            {isAuthenticated && user ? (
-              <div className="interactions__auth-banner">
-                <span className="interactions__auth-avatar">
-                  {(user.name || 'U')[0].toUpperCase()}
-                </span>
-                <div className="interactions__auth-info">
-                  <span className="interactions__auth-name">
-                    Commenting as <strong>{user.name}</strong>
-                  </span>
-                  <span className="interactions__auth-verified">✓ Verified Account</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="interactions__guest-prompt">
-                  <span>Want a verified author badge?</span>
+          {/* Comment Form / Sign In Prompt */}
+          {!isAuthenticated ? (
+            <div className="interactions__signin-required-banner" id={`comment-signin-prompt-${slug}`}>
+              <div className="interactions__signin-icon">🔐</div>
+              <div className="interactions__signin-content">
+                <h5 className="interactions__signin-title">Sign in to join the discussion</h5>
+                <p className="interactions__signin-desc">
+                  To maintain thoughtful and respectful conversations, an authenticated account is required to comment.
+                </p>
+                <div className="interactions__signin-actions">
                   <button
                     type="button"
-                    className="interactions__prompt-signin"
+                    className="interactions__signin-btn"
                     onClick={() => openAuthModal('login')}
                   >
                     Sign In
                   </button>
+                  <button
+                    type="button"
+                    className="interactions__register-btn"
+                    onClick={() => openAuthModal('register')}
+                  >
+                    Create Account
+                  </button>
                 </div>
-
-                <div className="interactions__form-row">
-                  <input
-                    type="text"
-                    className="interactions__input interactions__input--name"
-                    placeholder="Your name (optional)"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    maxLength={50}
-                    id={`comment-name-${slug}`}
-                  />
-                  <input
-                    type="email"
-                    className="interactions__input interactions__input--email"
-                    placeholder="Your email (optional)"
-                    value={authorEmail}
-                    onChange={(e) => setAuthorEmail(e.target.value)}
-                    maxLength={100}
-                    id={`comment-email-${slug}`}
-                  />
-                </div>
-              </>
-            )}
-
-            <textarea
-              className="interactions__input interactions__input--text"
-              placeholder={isAuthenticated ? `Share your reflections, ${user.name}...` : 'Write a comment...'}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              maxLength={1000}
-              rows={3}
-              id={`comment-text-${slug}`}
-            />
-
-            {/* Email Subscription Opt-in */}
-            <label className="interactions__subscribe-toggle" htmlFor={`comment-subscribe-${slug}`}>
-              <input
-                type="checkbox"
-                id={`comment-subscribe-${slug}`}
-                className="interactions__checkbox"
-                checked={subscribeUpdates}
-                onChange={(e) => setSubscribeUpdates(e.target.checked)}
-              />
-              <span className="interactions__checkbox-custom" />
-              <span className="interactions__subscribe-text">
-                Notify me of new blog updates via email
-              </span>
-            </label>
-
-            {/* Google reCAPTCHA v2 Widget (Guest Only) */}
-            {!isAuthenticated && (
-              <ReCaptcha
-                onVerify={(token) => {
-                  setRecaptchaToken(token);
-                  setCaptchaError('');
-                }}
-                onExpired={() => {
-                  setRecaptchaToken('');
-                }}
-                resetRef={recaptchaRef}
-              />
-            )}
-
-            {captchaError && (
-              <div className="interactions__captcha-error" id={`captcha-error-${slug}`}>
-                ⚠️ {captchaError}
               </div>
-            )}
+            </div>
+          ) : (
+            <form className="interactions__form" onSubmit={handleSubmitComment}>
+              <div className="interactions__auth-banner">
+                <span className="interactions__auth-avatar">
+                  {(user?.name || 'U')[0].toUpperCase()}
+                </span>
+                <div className="interactions__auth-info">
+                  <span className="interactions__auth-name">
+                    Commenting as <strong>{user?.name}</strong>
+                  </span>
+                  <span className="interactions__auth-verified">✓ Verified Author</span>
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              className="interactions__submit"
-              disabled={!commentText.trim() || (!isAuthenticated && !recaptchaToken) || submitting}
-              id={`comment-submit-${slug}`}
-            >
-              {submitting ? 'Posting...' : 'Post Comment'}
-            </button>
-          </form>
+              <textarea
+                className="interactions__input interactions__input--text"
+                placeholder={`Share your reflections, ${user?.name}...`}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                id={`comment-text-${slug}`}
+              />
+
+              {/* Email Subscription Opt-in */}
+              <label className="interactions__subscribe-toggle" htmlFor={`comment-subscribe-${slug}`}>
+                <input
+                  type="checkbox"
+                  id={`comment-subscribe-${slug}`}
+                  className="interactions__checkbox"
+                  checked={subscribeUpdates}
+                  onChange={(e) => setSubscribeUpdates(e.target.checked)}
+                />
+                <span className="interactions__checkbox-custom" />
+                <span className="interactions__subscribe-text">
+                  Notify me of new blog updates via email
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                className="interactions__submit"
+                disabled={!commentText.trim() || submitting}
+                id={`comment-submit-${slug}`}
+              >
+                {submitting ? 'Posting...' : 'Post Comment'}
+              </button>
+            </form>
+          )}
 
           {/* Comment List */}
           {comments.length > 0 && (
