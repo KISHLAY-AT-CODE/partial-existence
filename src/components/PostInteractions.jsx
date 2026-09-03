@@ -578,7 +578,27 @@ export default function PostInteractions({ slug, github, allpoetry }) {
           </h4>
 
           {/* Comment Form / Sign In Prompt */}
-          {!isAuthenticated ? (
+          {!siteConfig.apiUrl ? (
+            <form className="interactions__form" onSubmit={handleSubmitComment}>
+              <textarea
+                className="interactions__input interactions__input--text"
+                placeholder="Write a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                id={`comment-text-${slug}`}
+              />
+              <button
+                type="submit"
+                className="interactions__submit"
+                disabled={!commentText.trim() || submitting}
+                id={`comment-submit-${slug}`}
+              >
+                {submitting ? 'Posting...' : 'Post Comment'}
+              </button>
+            </form>
+          ) : !isAuthenticated ? (
             <div className="interactions__signin-required-banner" id={`comment-signin-prompt-${slug}`}>
               <div className="interactions__signin-icon">🔐</div>
               <div className="interactions__signin-content">
