@@ -75,14 +75,13 @@ export default function AuthModal() {
 
         {/* Header Branding */}
         <div className="auth-modal-header">
-          <div className="auth-modal-badge">SaaS Blog Identity</div>
           <h3 className="auth-modal-title">
             {authModalMode === 'login' ? 'Welcome Back' : 'Create Account'}
           </h3>
           <p className="auth-modal-desc">
             {authModalMode === 'login'
-              ? 'Sign in to comment with verified credentials and manage interactions.'
-              : 'Join the community to share thoughts and get verified author badges.'}
+              ? 'Sign in to join the discussion and share your reflections.'
+              : 'Create an account to join the discussion and get verified author badges.'}
           </p>
         </div>
 
