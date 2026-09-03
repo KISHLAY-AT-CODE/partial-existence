@@ -382,7 +382,8 @@ a:hover {
 /* ---- Header (Seamless Transparent & Centered Branding) ---- */
 .header {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 50;
   padding: var(--space-xl) var(--page-padding) calc(var(--space-xl) + 4px);
   border-bottom: none;
   background: transparent;
@@ -3495,14 +3496,15 @@ b {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 220px;
-  background: rgba(8, 14, 11, 0.96);
-  border: 1px solid rgba(120, 170, 130, 0.3);
+  width: 230px;
+  background: rgba(8, 14, 11, 0.98);
+  border: 1px solid rgba(120, 170, 130, 0.35);
   border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(16px);
-  z-index: 100;
+  padding: 14px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.95), 0 0 1px rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 9999;
   text-align: left;
   animation: authFadeIn 0.18s ease-out;
 }
