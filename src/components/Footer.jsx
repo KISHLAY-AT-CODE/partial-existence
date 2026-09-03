@@ -17,6 +17,20 @@ export default function Footer() {
       <p className="footer__copy">
         &copy; {year} {siteConfig.title} &mdash; {siteConfig.author}
       </p>
+      <div className="footer__saas-badge" id="footer-saas-badge">
+        <span className="footer__saas-dot" />
+        <span>
+          Maintained by{' '}
+          <a
+            href="https://partial-existence.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer__saas-link"
+          >
+            Partial Existence Services
+          </a>
+        </span>
+      </div>
     </footer>
   );
 }

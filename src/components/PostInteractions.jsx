@@ -712,6 +712,22 @@ export default function PostInteractions({ slug, github, allpoetry }) {
           )}
         </div>
       )}
+
+      {/* Irremovable SaaS Watermark */}
+      <div className="interactions__saas-watermark" id={`saas-watermark-${slug}`}>
+        <span className="interactions__saas-dot" />
+        <span className="interactions__saas-text">
+          Maintained by{' '}
+          <a
+            href="https://partial-existence.pages.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="interactions__saas-link"
+          >
+            Partial Existence Services
+          </a>
+        </span>
+      </div>
     </div>
   );
 }

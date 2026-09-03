@@ -3949,5 +3949,72 @@ b {
   color: var(--color-accent, #a0c040);
 }
 
+/* ============================================================================
+   IRREMOVABLE SAAS WATERMARK (Subtle & Elegant)
+   ============================================================================ */
+.interactions__saas-watermark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.74rem;
+  color: var(--color-text-faint, #6b7280);
+  letter-spacing: 0.02em;
+  align-self: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.interactions__saas-watermark:hover {
+  border-color: rgba(160, 192, 64, 0.25);
+  background: rgba(10, 18, 12, 0.45);
+  color: var(--color-text-muted, #9ca3af);
+}
+
+.interactions__saas-dot,
+.footer__saas-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent, #a0c040);
+  box-shadow: 0 0 6px var(--color-accent, #a0c040);
+  flex-shrink: 0;
+}
+
+.interactions__saas-link,
+.footer__saas-link {
+  color: var(--color-accent, #a0c040);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.18s ease;
+}
+
+.interactions__saas-link:hover,
+.footer__saas-link:hover {
+  color: #c4ea48;
+  text-decoration: underline;
+}
+
+/* Global Footer SaaS Badge */
+.footer__saas-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 0.74rem;
+  color: var(--color-text-faint, #6b7280);
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.footer__saas-badge:hover {
+  opacity: 1;
+}
+
 
 
