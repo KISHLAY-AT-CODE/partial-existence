@@ -2196,6 +2196,95 @@ b {
   margin-bottom: var(--space-lg);
 }
 
+/* Warning Banner for Profanity & Account Violations */
+.interactions__warning-banner {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16), rgba(245, 158, 11, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15), inset 0 0 12px rgba(239, 68, 68, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: shakeWarning 0.4s ease-in-out both;
+}
+
+@keyframes shakeWarning {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.interactions__warning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+}
+
+.interactions__warning-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.interactions__warning-icon {
+  font-size: var(--text-base);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+.interactions__warning-title {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #fca5a5;
+  letter-spacing: 0.02em;
+}
+
+.interactions__warning-close {
+  background: none;
+  border: none;
+  color: rgba(252, 165, 165, 0.7);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.interactions__warning-close:hover {
+  color: #ffffff;
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.interactions__warning-body {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: #fee2e2;
+  margin: 0 0 var(--space-xs) 0;
+  font-weight: 400;
+}
+
+.interactions__warning-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #fef08a;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #eab308;
+}
+
+.interactions__warning-shield {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 /* Comment form */
 .interactions__form {
   display: flex;

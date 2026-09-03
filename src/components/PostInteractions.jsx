@@ -32,6 +32,7 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   const [subscribeUpdates, setSubscribeUpdates] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [warningData, setWarningData] = useState(null);
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [captchaError, setCaptchaError] = useState('');
   const recaptchaRef = useRef(null);
@@ -223,6 +224,7 @@ export default function PostInteractions({ slug, github, allpoetry }) {
 
     // Sync to backend
     try {
+      setWarningData(null);
       const res = await postComment(
         slug,
         authorDisplayName,
@@ -235,8 +237,15 @@ export default function PostInteractions({ slug, github, allpoetry }) {
       if (res && res.success === false) {
         // Rollback optimistic comment on failure
         setComments(previousComments);
-        alert(res.error || 'Failed to post comment. Please try again.');
+        setCommentText(trimmed);
+        setWarningData({
+          title: res.title || 'Content Policy & Account Warning',
+          message: res.warning || res.message || res.error || 'Failed to post comment',
+          accountNotice: res.accountNotice || null,
+          isProfanity: Boolean(res.isProfanity),
+        });
       } else if (res && res.comment) {
+        setWarningData(null);
         const serverComment = res.comment;
         setComments((prev) =>
           prev.map((c) => (c.id === tempId ? serverComment : c))
@@ -577,6 +586,33 @@ export default function PostInteractions({ slug, github, allpoetry }) {
           <h4 className="interactions__comments-title">
             Comments ({comments.length})
           </h4>
+
+          {/* Warning Banner (Profanity & Account Block Notice from Backend) */}
+          {warningData && (
+            <div className="interactions__warning-banner" role="alert" id={`comment-warning-${slug}`}>
+              <div className="interactions__warning-header">
+                <div className="interactions__warning-title-wrap">
+                  <span className="interactions__warning-icon" aria-hidden="true">⚠️</span>
+                  <strong className="interactions__warning-title">{warningData.title}</strong>
+                </div>
+                <button
+                  type="button"
+                  className="interactions__warning-close"
+                  onClick={() => setWarningData(null)}
+                  aria-label="Dismiss warning banner"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="interactions__warning-body">{warningData.message}</p>
+              {warningData.accountNotice && (
+                <div className="interactions__warning-footer">
+                  <span className="interactions__warning-shield">🛡️</span>
+                  <span>{warningData.accountNotice}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Comment Form / Sign In Prompt */}
           {!siteConfig.apiUrl ? (

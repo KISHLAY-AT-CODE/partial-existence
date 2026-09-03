@@ -294,7 +294,16 @@ export async function postComment(slug, author, text, recaptchaToken = null, ema
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      return { success: false, error: errData.error || 'Failed to submit comment' };
+      return {
+        success: false,
+        error: errData.error || 'Failed to submit comment',
+        warning: errData.warning || null,
+        title: errData.title || null,
+        message: errData.message || null,
+        accountNotice: errData.accountNotice || null,
+        isProfanity: Boolean(errData.isProfanity),
+        detectedWords: errData.detectedWords || [],
+      };
     }
     return await res.json();
   } catch (err) {
