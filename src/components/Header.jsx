@@ -81,16 +81,22 @@ export default function Header() {
             <div className="header__user-menu" ref={userMenuRef}>
               <button
                 type="button"
-                className="header__user-btn"
+                className="header__user-avatar-btn"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 aria-expanded={isUserMenuOpen}
                 title={`${user.name} (${user.email})`}
+                aria-label={`User menu for ${user.name}`}
                 id="header-user-btn"
               >
-                <span className="header__user-avatar">
-                  {(user.name || 'U')[0].toUpperCase()}
+                <span className="header__user-avatar-initials">
+                  {(user.name || 'U')
+                    .trim()
+                    .split(/\s+/)
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()}
                 </span>
-                <span className="header__user-name">{user.name}</span>
               </button>
 
               {isUserMenuOpen && (
