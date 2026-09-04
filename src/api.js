@@ -55,7 +55,7 @@ function getCommonHeaders(customHeaders = {}) {
 /**
  * Register a new user account
  */
-export async function registerUser(name, email, password, recaptchaToken = null) {
+export async function registerUser(name, email, password) {
   try {
     const res = await fetch(getEndpoint('/api/auth/register'), {
       method: 'POST',
@@ -64,7 +64,6 @@ export async function registerUser(name, email, password, recaptchaToken = null)
         name,
         email,
         password,
-        recaptchaToken: recaptchaToken || null,
         websiteId: siteConfig.websiteId || 'partial-existence',
       }),
     });
@@ -236,8 +235,13 @@ export async function getPageViews(slug) {
  */
 export async function getLikes(slug) {
   try {
+    const deviceId = getDeviceId();
     const res = await fetch(
-      getEndpoint(`/api/likes?slug=${encodeURIComponent(slug)}&websiteId=${encodeURIComponent(siteConfig.websiteId || 'partial-existence')}`),
+      getEndpoint(
+        `/api/likes?slug=${encodeURIComponent(slug)}&websiteId=${encodeURIComponent(
+          siteConfig.websiteId || 'partial-existence'
+        )}&deviceId=${encodeURIComponent(deviceId)}`
+      ),
       {
         headers: getCommonHeaders(),
       }
@@ -254,6 +258,7 @@ export async function getLikes(slug) {
  * Toggle or update like status
  */
 export async function toggleLike(slug, liked) {
+  const deviceId = getDeviceId();
   try {
     const res = await fetch(getEndpoint('/api/likes'), {
       method: 'POST',
@@ -261,7 +266,8 @@ export async function toggleLike(slug, liked) {
       body: JSON.stringify({
         slug,
         action: liked ? 'like' : 'unlike',
-        deviceId: getDeviceId(),
+        liked,
+        deviceId,
         websiteId: siteConfig.websiteId || 'partial-existence',
       }),
     });
@@ -293,9 +299,9 @@ export async function getComments(slug) {
 }
 
 /**
- * Submit a new comment (authenticated or guest with recaptcha)
+ * Submit a new comment (authenticated user)
  */
-export async function postComment(slug, author, text, recaptchaToken = null, email = null, subscribeUpdates = false) {
+export async function postComment(slug, author, text, email = null, subscribeUpdates = false) {
   const authorToken = getDeviceId();
   try {
     const res = await fetch(getEndpoint('/api/comments'), {
@@ -308,7 +314,6 @@ export async function postComment(slug, author, text, recaptchaToken = null, ema
         email,
         subscribeUpdates,
         authorToken,
-        recaptchaToken,
         websiteId: siteConfig.websiteId || 'partial-existence',
       }),
     });

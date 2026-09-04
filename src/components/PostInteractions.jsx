@@ -101,11 +101,18 @@ export default function PostInteractions({ slug, github, allpoetry }) {
 
         if (likesRes && typeof likesRes.likes === 'number') {
           setLikeCount(likesRes.likes);
+          if (typeof likesRes.liked === 'boolean') {
+            setLiked(likesRes.liked);
+          }
           try {
             const existing = JSON.parse(localStorage.getItem(likeKey) || '{}');
             localStorage.setItem(
               likeKey,
-              JSON.stringify({ ...existing, count: likesRes.likes })
+              JSON.stringify({
+                ...existing,
+                count: likesRes.likes,
+                liked: typeof likesRes.liked === 'boolean' ? likesRes.liked : Boolean(existing.liked),
+              })
             );
           } catch {
             // Ignore
@@ -142,22 +149,36 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   }, [slug, likeKey, commentKey, viewKey]);
 
   async function handleLike() {
-    const newLiked = !liked;
-    const newCount = newLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
-    setLiked(newLiked);
-    setLikeCount(newCount);
+    const nextLiked = !liked;
+    const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+    setLiked(nextLiked);
+    setLikeCount(nextCount);
 
     try {
-      localStorage.setItem(likeKey, JSON.stringify({ liked: newLiked, count: newCount }));
+      localStorage.setItem(likeKey, JSON.stringify({ liked: nextLiked, count: nextCount }));
     } catch {
       // Ignore
     }
 
     // Sync to backend
     try {
-      const res = await toggleLike(slug, newLiked);
+      const res = await toggleLike(slug, nextLiked);
       if (res && typeof res.likes === 'number') {
         setLikeCount(res.likes);
+        if (typeof res.liked === 'boolean') {
+          setLiked(res.liked);
+        }
+        try {
+          localStorage.setItem(
+            likeKey,
+            JSON.stringify({
+              liked: typeof res.liked === 'boolean' ? res.liked : nextLiked,
+              count: res.likes,
+            })
+          );
+        } catch {
+          // Ignore
+        }
       }
     } catch {
       // Keep optimistic local count
@@ -185,7 +206,6 @@ export default function PostInteractions({ slug, github, allpoetry }) {
         slug,
         authorDisplayName,
         trimmed,
-        null,
         user?.email || null,
         subscribeUpdates
       );

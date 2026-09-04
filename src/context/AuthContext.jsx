@@ -43,8 +43,8 @@ export function AuthProvider({ children }) {
     return res;
   }
 
-  async function register(name, email, password, recaptchaToken = null) {
-    const res = await registerUser(name, email, password, recaptchaToken);
+  async function register(name, email, password) {
+    const res = await registerUser(name, email, password);
     if (res.success) {
       if (res.user) {
         setUser(res.user);

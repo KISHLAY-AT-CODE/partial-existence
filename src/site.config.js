@@ -45,8 +45,5 @@ export const siteConfig = {
 
   // Multi-Tenant SaaS Blog Website Identifier
   websiteId: 'partial-existence',
-
-  // Google reCAPTCHA v2 / Checkbox Site Key (public)
-  recaptchaSiteKey: '6Le2GZ8tAAAAACYe_3v7quzqVz_FKgv-HVM9o8FK',
 };
 
