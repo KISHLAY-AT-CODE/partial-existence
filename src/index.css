@@ -1110,27 +1110,20 @@ a:hover {
   transform-style: preserve-3d;
   cursor: pointer;
   outline: none;
-  border-radius: 20px;
+  border-radius: 50%;
   overflow: hidden;
-  background: rgba(10, 15, 12, 0.85);
-  border: 1.5px solid rgba(120, 168, 140, 0.3);
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(160, 192, 64, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
+  box-shadow: none;
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.3s ease,
     box-shadow 0.35s ease;
 }
 
 .hero-logo-container:hover .hero-logo-grid,
 .hero-logo-container--revealed .hero-logo-grid {
   transform: translateY(-4px) scale(1.03);
-  border-color: rgba(160, 192, 64, 0.6);
-  box-shadow: 
-    0 20px 45px rgba(0, 0, 0, 0.8),
-    0 0 30px rgba(160, 192, 64, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .hero-logo-img {
@@ -1138,7 +1131,7 @@ a:hover {
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 18px;
+  border-radius: 50%;
   user-select: none;
   pointer-events: none;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
