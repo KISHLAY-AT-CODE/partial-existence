@@ -32,8 +32,21 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   const [subscribeUpdates, setSubscribeUpdates] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isCheckingProfanity, setIsCheckingProfanity] = useState(false);
+  const [scrambleSymbols, setScrambleSymbols] = useState('$%^&*#@!');
   const [warningData, setWarningData] = useState(null);
   const [recaptchaToken, setRecaptchaToken] = useState('');
+
+  // Animated scramble effect for $%^&*#@! on the loading sentence
+  useEffect(() => {
+    if (!isCheckingProfanity) return;
+    const chars = ['$', '%', '^', '&', '*', '#', '@', '!'];
+    const interval = setInterval(() => {
+      const shuffled = [...chars].sort(() => 0.5 - Math.random()).join('');
+      setScrambleSymbols(shuffled);
+    }, 110);
+    return () => clearInterval(interval);
+  }, [isCheckingProfanity]);
   const [captchaError, setCaptchaError] = useState('');
   const recaptchaRef = useRef(null);
 
@@ -178,53 +191,14 @@ export default function PostInteractions({ slug, github, allpoetry }) {
     const trimmed = commentText.trim();
     if (!trimmed) return;
 
-    const tempId = `cmt_${Date.now()}_local`;
     const authorDisplayName = user?.name || 'Anonymous';
 
-    const newComment = {
-      id: tempId,
-      slug,
-      userId: user?.id || null,
-      author: authorDisplayName,
-      isVerified: true,
-      emailHash: null,
-      subscribeUpdates,
-      text: trimmed,
-      date: new Date().toISOString(),
-    };
-
-    const previousComments = [...comments];
-    const updated = [newComment, ...comments];
-    setComments(updated);
-    setCommentText('');
     setSubmitting(true);
+    setIsCheckingProfanity(true);
+    setWarningData(null);
 
-    // Optimistically record ownership
-    setMyCommentIds((prev) => {
-      const next = [...prev, tempId];
-      try {
-        localStorage.setItem('pe_my_comments', JSON.stringify(next));
-      } catch {
-        // Ignore
-      }
-      return next;
-    });
-
+    // Sync to backend — 3-Stage Profanity detection runs on backend
     try {
-      localStorage.setItem(commentKey, JSON.stringify(updated));
-      if (!isAuthenticated) {
-        saveAuthorName(authorName);
-        if (email) {
-          localStorage.setItem('pe_author_email', email);
-        }
-      }
-    } catch {
-      // Ignore
-    }
-
-    // Sync to backend
-    try {
-      setWarningData(null);
       const res = await postComment(
         slug,
         authorDisplayName,
@@ -235,9 +209,7 @@ export default function PostInteractions({ slug, github, allpoetry }) {
       );
 
       if (res && res.success === false) {
-        // Rollback optimistic comment on failure
-        setComments(previousComments);
-        setCommentText(trimmed);
+        // Profanity or validation failed: do NOT post, keep text in input, show warning
         setWarningData({
           title: res.title || 'Content Policy & Account Warning',
           message: res.warning || res.message || res.error || 'Failed to post comment',
@@ -245,22 +217,40 @@ export default function PostInteractions({ slug, github, allpoetry }) {
           isProfanity: Boolean(res.isProfanity),
         });
       } else if (res && res.comment) {
+        // Approved & clean comment: post to UI and clear textarea
         setWarningData(null);
+        setCommentText('');
         const serverComment = res.comment;
-        setComments((prev) =>
-          prev.map((c) => (c.id === tempId ? serverComment : c))
-        );
+        setComments((prev) => [serverComment, ...prev]);
+
+        // Record ownership locally
+        setMyCommentIds((prev) => {
+          const next = [...prev, serverComment.id];
+          try {
+            localStorage.setItem('pe_my_comments', JSON.stringify(next));
+          } catch {
+            // Ignore
+          }
+          return next;
+        });
+
         try {
-          const finalComments = updated.map((c) => (c.id === tempId ? serverComment : c));
-          localStorage.setItem(commentKey, JSON.stringify(finalComments));
+          const stored = localStorage.getItem(commentKey);
+          const currentList = stored ? JSON.parse(stored) : comments;
+          localStorage.setItem(commentKey, JSON.stringify([serverComment, ...currentList]));
         } catch {
           // Ignore
         }
       }
     } catch (err) {
       console.error('[Comment submission error]:', err);
+      setWarningData({
+        title: 'Submission Error',
+        message: err.message || 'An unexpected error occurred while posting your comment.',
+      });
     } finally {
       setSubmitting(false);
+      setIsCheckingProfanity(false);
     }
   }
 
@@ -767,6 +757,48 @@ export default function PostInteractions({ slug, github, allpoetry }) {
               No comments yet. Be the first to share your thoughts.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Moderation Loading Dialogue Box */}
+      {isCheckingProfanity && (
+        <div
+          className="profanity-modal-overlay"
+          role="status"
+          aria-live="polite"
+          aria-label="Looking for profanity words"
+          id={`profanity-loader-${slug}`}
+        >
+          <div className="profanity-modal-card">
+            <div className="profanity-shield-pulse-wrap">
+              <div className="profanity-shield-radar" />
+              <div className="profanity-shield-icon">🛡️</div>
+            </div>
+
+            <h4 className="profanity-modal-title">
+              Looking for profanity words...
+              <span className="profanity-title-symbols-badge" aria-hidden="true">
+                {scrambleSymbols}
+              </span>
+            </h4>
+            <p className="profanity-modal-desc">
+              Verifying content against safety datasets, AI moderation & database filters
+            </p>
+
+            {/* Special Animated Symbols: $%^&*#@! */}
+            <div className="profanity-symbols-track" aria-hidden="true">
+              {['$', '%', '^', '&', '*', '#', '@', '!'].map((sym, idx) => (
+                <span key={idx} className={`profanity-symbol sym-${idx + 1}`}>
+                  {sym}
+                </span>
+              ))}
+            </div>
+
+            {/* Progress / Shimmer bar */}
+            <div className="profanity-progress-track">
+              <div className="profanity-progress-bar" />
+            </div>
+          </div>
         </div>
       )}
     </div>
