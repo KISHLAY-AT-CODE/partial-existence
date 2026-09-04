@@ -141,202 +141,207 @@ export default function SearchModal({ isOpen, onClose }) {
       });
     }
 
-    const render = (now) => {
-      // Smooth mouse interpolation
-      mouse.x += (mouse.targetX - mouse.x) * 0.18;
-      mouse.y += (mouse.targetY - mouse.y) * 0.18;
+    const render = (now = performance.now()) => {
+      try {
+        // Smooth mouse interpolation
+        mouse.x += (mouse.targetX - mouse.x) * 0.18;
+        mouse.y += (mouse.targetY - mouse.y) * 0.18;
 
-      const elapsed = (now - startTime) / 1000;
-      
-      // Emergence sequence (0.48s total):
-      // 1. First 0.18s: Lift-off / pop towards screen (scale up to 1.09x with brightness flare)
-      // 2. 0.18s to 0.48s: Snaps down smoothly into crisp 1.0x matrix
-      const emergeProgress = Math.min(1, elapsed / 0.48);
-      const easeEmerge = 1 - Math.pow(1 - emergeProgress, 3);
+        const elapsed = Math.max(0, (now - startTime) / 1000);
+        
+        // Emergence sequence (0.48s total):
+        const emergeProgress = Math.max(0, Math.min(1, elapsed / 0.48));
+        const easeEmerge = Math.max(0, Math.min(1, 1 - Math.pow(1 - emergeProgress, 3)));
 
-      // Lift-off scale: pops up on initial burst and settles instantly
-      let liftScale = 1;
-      let flareAlpha = 0;
-      if (elapsed < 0.48) {
-        const liftPhase = elapsed / 0.48;
-        // Bell-curve pop: peak at ~0.15s
-        const pop = Math.sin(liftPhase * Math.PI) * Math.exp(-liftPhase * 3.2);
-        liftScale = 1 + pop * 0.09;
-        flareAlpha = pop * 0.75;
-      }
-
-      // Clear with pure void black
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.save();
-      // Apply 3D lift-off scale from center
-      ctx.translate(width / 2, height / 2);
-      ctx.scale(liftScale, liftScale);
-      ctx.translate(-width / 2, -height / 2);
-
-      const gridSize = 46;
-      const cols = Math.ceil(width / gridSize) + 2;
-      const rows = Math.ceil(height / gridSize) + 2;
-      const hoverRadius = 220;
-
-      // 1. BASE PASS: Draw standard crisp white vector grid lines
-      const baseAlpha = Math.min(0.28, 0.16 * easeEmerge + flareAlpha * 0.25);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha})`;
-      ctx.lineWidth = 1 + flareAlpha * 0.5;
-
-      ctx.beginPath();
-      // Vertical lines
-      for (let c = -1; c < cols; c++) {
-        const x = c * gridSize;
-        ctx.moveTo(x, -gridSize);
-        ctx.lineTo(x, height + gridSize);
-      }
-      // Horizontal lines
-      for (let r = -1; r < rows; r++) {
-        const y = r * gridSize;
-        ctx.moveTo(-gridSize, y);
-        ctx.lineTo(width + gridSize, y);
-      }
-      ctx.stroke();
-
-      // 2. CIRCULAR HOVER PASS: Strictly circular radial spotlight illumination around cursor
-      if (mouse.active && hoverRadius > 0) {
-        ctx.save();
-        // Clip to a perfect circle around the mouse
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, hoverRadius, 0, Math.PI * 2);
-        ctx.clip();
-
-        // Radial glow gradient for illuminated grid lines
-        const radGrad = ctx.createRadialGradient(
-          mouse.x,
-          mouse.y,
-          0,
-          mouse.x,
-          mouse.y,
-          hoverRadius
-        );
-        radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-        radGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.65)');
-        radGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.25)');
-        radGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
-
-        ctx.strokeStyle = radGrad;
-        ctx.lineWidth = 1.6;
-
-        ctx.beginPath();
-        // Redraw grid lines only within the circular clip region
-        const startCol = Math.floor((mouse.x - hoverRadius) / gridSize);
-        const endCol = Math.ceil((mouse.x + hoverRadius) / gridSize);
-        for (let c = startCol; c <= endCol; c++) {
-          const x = c * gridSize;
-          ctx.moveTo(x, mouse.y - hoverRadius);
-          ctx.lineTo(x, mouse.y + hoverRadius);
+        // Lift-off scale: pops up on initial burst and settles instantly
+        let liftScale = 1;
+        let flareAlpha = 0;
+        if (elapsed < 0.48) {
+          const liftPhase = Math.max(0, Math.min(1, elapsed / 0.48));
+          // Bell-curve pop: peak at ~0.15s
+          const pop = Math.sin(liftPhase * Math.PI) * Math.exp(-liftPhase * 3.2);
+          liftScale = 1 + Math.max(0, pop * 0.09);
+          flareAlpha = Math.max(0, pop * 0.75);
         }
 
-        const startRow = Math.floor((mouse.y - hoverRadius) / gridSize);
-        const endRow = Math.ceil((mouse.y + hoverRadius) / gridSize);
-        for (let r = startRow; r <= endRow; r++) {
+        // Clear with pure void black
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.save();
+        // Apply 3D lift-off scale from center
+        ctx.translate(width / 2, height / 2);
+        ctx.scale(liftScale, liftScale);
+        ctx.translate(-width / 2, -height / 2);
+
+        const gridSize = 46;
+        const cols = Math.ceil(width / gridSize) + 2;
+        const rows = Math.ceil(height / gridSize) + 2;
+        const hoverRadius = 220;
+
+        // 1. BASE PASS: Draw standard crisp white vector grid lines
+        const baseAlpha = Math.max(0, Math.min(0.28, 0.16 * easeEmerge + flareAlpha * 0.25));
+        ctx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha})`;
+        ctx.lineWidth = 1 + flareAlpha * 0.5;
+
+        ctx.beginPath();
+        // Vertical lines
+        for (let c = -1; c < cols; c++) {
+          const x = c * gridSize;
+          ctx.moveTo(x, -gridSize);
+          ctx.lineTo(x, height + gridSize);
+        }
+        // Horizontal lines
+        for (let r = -1; r < rows; r++) {
           const y = r * gridSize;
-          ctx.moveTo(mouse.x - hoverRadius, y);
-          ctx.lineTo(mouse.x + hoverRadius, y);
+          ctx.moveTo(-gridSize, y);
+          ctx.lineTo(width + gridSize, y);
         }
         ctx.stroke();
 
-        // Subtle circular aura fill
-        const softAura = ctx.createRadialGradient(
-          mouse.x,
-          mouse.y,
-          0,
-          mouse.x,
-          mouse.y,
-          hoverRadius
-        );
-        softAura.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
-        softAura.addColorStop(0.6, 'rgba(255, 255, 255, 0.015)');
-        softAura.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = softAura;
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, hoverRadius, 0, Math.PI * 2);
-        ctx.fill();
+        // 2. CIRCULAR HOVER PASS: Strictly circular radial spotlight illumination around cursor
+        if (mouse.active && hoverRadius > 0) {
+          ctx.save();
+          // Clip to a perfect circle around the mouse
+          ctx.beginPath();
+          ctx.arc(mouse.x, mouse.y, Math.max(0, hoverRadius), 0, Math.PI * 2);
+          ctx.clip();
 
-        ctx.restore();
-      }
+          // Radial glow gradient for illuminated grid lines
+          const radGrad = ctx.createRadialGradient(
+            mouse.x,
+            mouse.y,
+            0,
+            mouse.x,
+            mouse.y,
+            Math.max(0.1, hoverRadius)
+          );
+          radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+          radGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.65)');
+          radGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.25)');
+          radGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
 
-      // 3. MAJOR COORDINATE CROSSHAIRS
-      const majorStep = gridSize * 2;
-      for (let x = 0; x < width + gridSize; x += majorStep) {
-        for (let y = 0; y < height + gridSize; y += majorStep) {
-          const distToMouse = Math.hypot(x - mouse.x, y - mouse.y);
-          const isInsideCircle = mouse.active && distToMouse < hoverRadius;
-          const crossSize = isInsideCircle ? 6 : 4;
-          
-          let crossAlpha = 0.28 * easeEmerge;
-          if (isInsideCircle) {
-            crossAlpha += (1 - distToMouse / hoverRadius) * 0.7;
+          ctx.strokeStyle = radGrad;
+          ctx.lineWidth = 1.6;
+
+          ctx.beginPath();
+          // Redraw grid lines only within the circular clip region
+          const startCol = Math.floor((mouse.x - hoverRadius) / gridSize);
+          const endCol = Math.ceil((mouse.x + hoverRadius) / gridSize);
+          for (let c = startCol; c <= endCol; c++) {
+            const x = c * gridSize;
+            ctx.moveTo(x, mouse.y - hoverRadius);
+            ctx.lineTo(x, mouse.y + hoverRadius);
           }
 
-          ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, crossAlpha)})`;
-          ctx.lineWidth = isInsideCircle ? 1.5 : 1;
-          ctx.beginPath();
-          ctx.moveTo(x - crossSize, y);
-          ctx.lineTo(x + crossSize, y);
-          ctx.moveTo(x, y - crossSize);
-          ctx.lineTo(x, y + crossSize);
+          const startRow = Math.floor((mouse.y - hoverRadius) / gridSize);
+          const endRow = Math.ceil((mouse.y + hoverRadius) / gridSize);
+          for (let r = startRow; r <= endRow; r++) {
+            const y = r * gridSize;
+            ctx.moveTo(mouse.x - hoverRadius, y);
+            ctx.lineTo(mouse.x + hoverRadius, y);
+          }
           ctx.stroke();
+
+          // Subtle circular aura fill
+          const softAura = ctx.createRadialGradient(
+            mouse.x,
+            mouse.y,
+            0,
+            mouse.x,
+            mouse.y,
+            Math.max(0.1, hoverRadius)
+          );
+          softAura.addColorStop(0, 'rgba(255, 255, 255, 0.04)');
+          softAura.addColorStop(0.6, 'rgba(255, 255, 255, 0.015)');
+          softAura.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = softAura;
+          ctx.beginPath();
+          ctx.arc(mouse.x, mouse.y, Math.max(0, hoverRadius), 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
         }
-      }
 
-      // 4. EMERGENCE FLARE RING & SHOCKWAVE
-      if (emergeProgress < 1) {
-        const shockRadius = easeEmerge * Math.hypot(width, height) * 0.85;
-        ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - emergeProgress) * 0.7})`;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.arc(width / 2, height / 2, shockRadius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+        // 3. MAJOR COORDINATE CROSSHAIRS
+        const majorStep = gridSize * 2;
+        for (let x = 0; x < width + gridSize; x += majorStep) {
+          for (let y = 0; y < height + gridSize; y += majorStep) {
+            const distToMouse = Math.hypot(x - mouse.x, y - mouse.y);
+            const isInsideCircle = mouse.active && distToMouse < hoverRadius;
+            const crossSize = isInsideCircle ? 6 : 4;
+            
+            let crossAlpha = 0.28 * easeEmerge;
+            if (isInsideCircle && hoverRadius > 0) {
+              crossAlpha += (1 - distToMouse / hoverRadius) * 0.7;
+            }
 
-      // 5. CONNECTED FLOATING VECTOR NODES
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i];
-        n.x += n.vx;
-        n.y += n.vy;
-
-        if (n.x < 0) n.x = width;
-        if (n.x > width) n.x = 0;
-        if (n.y < 0) n.y = height;
-        if (n.y > height) n.y = 0;
-
-        const distToMouse = Math.hypot(n.x - mouse.x, n.y - mouse.y);
-        const isInsideCircle = mouse.active && distToMouse < hoverRadius;
-        const nodeAlpha = isInsideCircle ? 0.95 : 0.65 * easeEmerge;
-
-        ctx.fillStyle = `rgba(255, 255, 255, ${nodeAlpha})`;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, isInsideCircle ? n.r * 1.35 : n.r, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let j = i + 1; j < nodes.length; j++) {
-          const n2 = nodes[j];
-          const dx = n.x - n2.x;
-          const dy = n.y - n2.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 130) {
-            let lineAlpha = (1 - d / 130) * 0.24 * easeEmerge;
-            if (isInsideCircle) lineAlpha += 0.35;
-            ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(0.9, lineAlpha)})`;
-            ctx.lineWidth = isInsideCircle ? 1.2 : 0.8;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(1, crossAlpha))})`;
+            ctx.lineWidth = isInsideCircle ? 1.5 : 1;
             ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(n2.x, n2.y);
+            ctx.moveTo(x - crossSize, y);
+            ctx.lineTo(x + crossSize, y);
+            ctx.moveTo(x, y - crossSize);
+            ctx.lineTo(x, y + crossSize);
             ctx.stroke();
           }
         }
-      }
 
-      ctx.restore();
+        // 4. EMERGENCE FLARE RING & SHOCKWAVE
+        if (emergeProgress < 1) {
+          const shockRadius = Math.max(0, easeEmerge * Math.hypot(width, height) * 0.85);
+          if (shockRadius > 0) {
+            ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, (1 - emergeProgress) * 0.7)})`;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, shockRadius, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // 5. CONNECTED FLOATING VECTOR NODES
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          n.x += n.vx;
+          n.y += n.vy;
+
+          if (n.x < 0) n.x = width;
+          if (n.x > width) n.x = 0;
+          if (n.y < 0) n.y = height;
+          if (n.y > height) n.y = 0;
+
+          const distToMouse = Math.hypot(n.x - mouse.x, n.y - mouse.y);
+          const isInsideCircle = mouse.active && distToMouse < hoverRadius;
+          const nodeAlpha = isInsideCircle ? 0.95 : 0.65 * easeEmerge;
+          const nodeRadius = Math.max(0.1, isInsideCircle ? n.r * 1.35 : n.r);
+
+          ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(1, nodeAlpha))})`;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, nodeRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          for (let j = i + 1; j < nodes.length; j++) {
+            const n2 = nodes[j];
+            const dx = n.x - n2.x;
+            const dy = n.y - n2.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 130) {
+              let lineAlpha = (1 - d / 130) * 0.24 * easeEmerge;
+              if (isInsideCircle) lineAlpha += 0.35;
+              ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, Math.min(0.9, lineAlpha))})`;
+              ctx.lineWidth = isInsideCircle ? 1.2 : 0.8;
+              ctx.beginPath();
+              ctx.moveTo(n.x, n.y);
+              ctx.lineTo(n2.x, n2.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        ctx.restore();
+      } catch (err) {
+        console.debug('[SearchModal Canvas] Render cycle warning:', err.message);
+      }
 
       animationFrameId = requestAnimationFrame(render);
     };

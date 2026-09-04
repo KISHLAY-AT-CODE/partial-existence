@@ -241,14 +241,14 @@ export default function HeroGrid() {
           0,
           mouse.x,
           mouse.y,
-          mouse.radius * 1.15
+          Math.max(0.1, mouse.radius * 1.15)
         );
         radialGlow.addColorStop(0, 'rgba(255, 255, 255, 0.055)');
         radialGlow.addColorStop(0.5, 'rgba(200, 200, 200, 0.02)');
         radialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = radialGlow;
         ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, mouse.radius * 1.15, 0, Math.PI * 2);
+        ctx.arc(mouse.x, mouse.y, Math.max(0, mouse.radius * 1.15), 0, Math.PI * 2);
         ctx.fill();
       }
 
