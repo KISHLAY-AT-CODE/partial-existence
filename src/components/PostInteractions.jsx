@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getLikes, toggleLike, getComments, postComment, deleteComment, getPageViews, recordPageView, getModerationConfig } from '../api';
 import { getSavedAuthorName, saveAuthorName, hasViewedPostCookie, markPostViewedCookie } from '../cookies';
 import { useAuth } from '../context/AuthContext';
 import { siteConfig } from '../site.config';
-import ReCaptcha from './ReCaptcha';
 
 /**
  * PostInteractions — Like button, comment section, view counter (deduplicated by device),
@@ -34,14 +33,22 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   const [submitting, setSubmitting] = useState(false);
   const [isCheckingProfanity, setIsCheckingProfanity] = useState(false);
   const [scrambleSymbols, setScrambleSymbols] = useState('$%^&*#@!');
+  const [activeSystemActions, setActiveSystemActions] = useState([]);
   const [moderationConfig, setModerationConfig] = useState({
     title: 'Looking for profanity words...',
-    subtitle: 'Verifying content against safety datasets, AI moderation & database filters',
+    subtitle: 'Your comment is being checked against profanity filtering system, it will be uploaded shortly...',
     symbols: ['$', '%', '^', '&', '*', '#', '@', '!'],
     scrambleIntervalMs: 110,
+    initialActions: [
+      'Multi-layer profanity filtering system initialized',
+      'Running Stage 1: In-memory dictionary & regex filter...',
+      'Stage 2: AI profanity detection initiated...',
+      'Verifying safety verdict with Gemini AI model...',
+      'Checking database-cached profanity vocabulary (Stage 3)...',
+      'Finalizing moderation check and publishing comment...'
+    ]
   });
   const [warningData, setWarningData] = useState(null);
-  const [recaptchaToken, setRecaptchaToken] = useState('');
 
   // Fetch SaaS Moderation Configuration from backend
   useEffect(() => {
@@ -51,9 +58,17 @@ export default function PostInteractions({ slug, github, allpoetry }) {
       if (active && cfg?.dialogue) {
         setModerationConfig({
           title: cfg.dialogue.title || 'Looking for profanity words...',
-          subtitle: cfg.dialogue.subtitle || 'Verifying content against safety datasets, AI moderation & database filters',
+          subtitle: cfg.dialogue.subtitle || 'Your comment is being checked against profanity filtering system, it will be uploaded shortly...',
           symbols: cfg.dialogue.symbols || ['$', '%', '^', '&', '*', '#', '@', '!'],
           scrambleIntervalMs: cfg.dialogue.scrambleIntervalMs || 110,
+          initialActions: cfg.dialogue.initialActions || [
+            'Multi-layer profanity filtering system initialized',
+            'Running Stage 1: In-memory dictionary & regex filter...',
+            'Stage 2: AI profanity detection initiated...',
+            'Verifying safety verdict with Gemini AI model...',
+            'Checking database-cached profanity vocabulary (Stage 3)...',
+            'Finalizing moderation check and publishing comment...'
+          ]
         });
       }
     }
@@ -71,8 +86,36 @@ export default function PostInteractions({ slug, github, allpoetry }) {
     }, moderationConfig.scrambleIntervalMs || 110);
     return () => clearInterval(interval);
   }, [isCheckingProfanity, moderationConfig]);
-  const [captchaError, setCaptchaError] = useState('');
-  const recaptchaRef = useRef(null);
+
+  // Progressive Live System Actions Ticker during profanity check
+  useEffect(() => {
+    if (!isCheckingProfanity) {
+      setActiveSystemActions([]);
+      return;
+    }
+
+    const steps = moderationConfig.initialActions || [
+      'Multi-layer profanity filtering system initialized',
+      'Running Stage 1: In-memory dictionary & regex filter...',
+      'Stage 2: AI profanity detection initiated...',
+      'Verifying safety verdict with Gemini AI model...',
+      'Checking database-cached profanity vocabulary (Stage 3)...',
+      'Finalizing moderation check and publishing comment...'
+    ];
+
+    setActiveSystemActions([steps[0]]);
+    let currentIdx = 1;
+
+    const actionTimer = setInterval(() => {
+      if (currentIdx < steps.length) {
+        const nextAction = steps[currentIdx];
+        setActiveSystemActions((prev) => [...prev, nextAction]);
+        currentIdx++;
+      }
+    }, 650);
+
+    return () => clearInterval(actionTimer);
+  }, [isCheckingProfanity, moderationConfig]);
 
   // Track comments authored by this user locally
   const [myCommentIds, setMyCommentIds] = useState(() => {
@@ -628,6 +671,66 @@ export default function PostInteractions({ slug, github, allpoetry }) {
             </div>
           )}
 
+          {/* Inline Profanity Checking Box (Scoped solely inside Comment Section) */}
+          {isCheckingProfanity && (
+            <div
+              className="profanity-comment-inline-box"
+              role="status"
+              aria-live="polite"
+              aria-label="Checking comment for profanity"
+              id={`profanity-loader-${slug}`}
+            >
+              <div className="profanity-inline-header">
+                <div className="profanity-shield-pulse-wrap">
+                  <div className="profanity-shield-radar" />
+                  <div className="profanity-shield-icon">🛡️</div>
+                </div>
+
+                <div className="profanity-inline-info">
+                  <h4 className="profanity-modal-title">
+                    {moderationConfig.title || 'Looking for profanity words...'}
+                    <span className="profanity-title-symbols-badge" aria-hidden="true">
+                      {scrambleSymbols}
+                    </span>
+                  </h4>
+                  <p className="profanity-modal-desc">
+                    {moderationConfig.subtitle || 'Your comment is being checked against profanity filtering system, it will be uploaded shortly...'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Special Animated Symbols: $%^&*#@! */}
+              <div className="profanity-symbols-track" aria-hidden="true">
+                {(moderationConfig.symbols || ['$', '%', '^', '&', '*', '#', '@', '!']).map((sym, idx) => (
+                  <span key={idx} className={`profanity-symbol sym-${(idx % 8) + 1}`}>
+                    {sym}
+                  </span>
+                ))}
+              </div>
+
+              {/* Live System Actions Terminal Feed */}
+              <div className="profanity-system-actions-feed">
+                <div className="profanity-system-actions-header">
+                  <span className="profanity-live-dot" />
+                  <span className="profanity-system-actions-title">System Actions in Progress</span>
+                </div>
+                <div className="profanity-system-actions-list">
+                  {activeSystemActions.map((actionText, idx) => (
+                    <div key={idx} className="profanity-action-row">
+                      <span className="profanity-action-marker">›</span>
+                      <span className="profanity-action-text">{actionText}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Progress / Shimmer bar */}
+              <div className="profanity-progress-track">
+                <div className="profanity-progress-bar" />
+              </div>
+            </div>
+          )}
+
           {/* Comment Form / Sign In Prompt */}
           {!siteConfig.apiUrl ? (
             <form className="interactions__form" onSubmit={handleSubmitComment}>
@@ -639,14 +742,15 @@ export default function PostInteractions({ slug, github, allpoetry }) {
                 maxLength={1000}
                 rows={3}
                 id={`comment-text-${slug}`}
+                disabled={isCheckingProfanity || submitting}
               />
               <button
                 type="submit"
                 className="interactions__submit"
-                disabled={!commentText.trim() || submitting}
+                disabled={!commentText.trim() || submitting || isCheckingProfanity}
                 id={`comment-submit-${slug}`}
               >
-                {submitting ? 'Posting...' : 'Post Comment'}
+                {submitting || isCheckingProfanity ? 'Checking safety...' : 'Post Comment'}
               </button>
             </form>
           ) : !isAuthenticated ? (
@@ -697,6 +801,7 @@ export default function PostInteractions({ slug, github, allpoetry }) {
                 maxLength={1000}
                 rows={3}
                 id={`comment-text-${slug}`}
+                disabled={isCheckingProfanity || submitting}
               />
 
               {/* Email Subscription Opt-in */}
@@ -707,6 +812,7 @@ export default function PostInteractions({ slug, github, allpoetry }) {
                   className="interactions__checkbox"
                   checked={subscribeUpdates}
                   onChange={(e) => setSubscribeUpdates(e.target.checked)}
+                  disabled={isCheckingProfanity || submitting}
                 />
                 <span className="interactions__checkbox-custom" />
                 <span className="interactions__subscribe-text">
@@ -717,10 +823,10 @@ export default function PostInteractions({ slug, github, allpoetry }) {
               <button
                 type="submit"
                 className="interactions__submit"
-                disabled={!commentText.trim() || submitting}
+                disabled={!commentText.trim() || submitting || isCheckingProfanity}
                 id={`comment-submit-${slug}`}
               >
-                {submitting ? 'Posting...' : 'Post Comment'}
+                {submitting || isCheckingProfanity ? 'Checking safety...' : 'Post Comment'}
               </button>
             </form>
           )}
@@ -781,48 +887,6 @@ export default function PostInteractions({ slug, github, allpoetry }) {
               No comments yet. Be the first to share your thoughts.
             </p>
           )}
-        </div>
-      )}
-
-      {/* Moderation Loading Dialogue Box */}
-      {isCheckingProfanity && (
-        <div
-          className="profanity-modal-overlay"
-          role="status"
-          aria-live="polite"
-          aria-label="Looking for profanity words"
-          id={`profanity-loader-${slug}`}
-        >
-          <div className="profanity-modal-card">
-            <div className="profanity-shield-pulse-wrap">
-              <div className="profanity-shield-radar" />
-              <div className="profanity-shield-icon">🛡️</div>
-            </div>
-
-            <h4 className="profanity-modal-title">
-              {moderationConfig.title}
-              <span className="profanity-title-symbols-badge" aria-hidden="true">
-                {scrambleSymbols}
-              </span>
-            </h4>
-            <p className="profanity-modal-desc">
-              {moderationConfig.subtitle}
-            </p>
-
-            {/* Special Animated Symbols: $%^&*#@! */}
-            <div className="profanity-symbols-track" aria-hidden="true">
-              {(moderationConfig.symbols || ['$', '%', '^', '&', '*', '#', '@', '!']).map((sym, idx) => (
-                <span key={idx} className={`profanity-symbol sym-${(idx % 8) + 1}`}>
-                  {sym}
-                </span>
-              ))}
-            </div>
-
-            {/* Progress / Shimmer bar */}
-            <div className="profanity-progress-track">
-              <div className="profanity-progress-bar" />
-            </div>
-          </div>
         </div>
       )}
     </div>

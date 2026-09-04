@@ -54,7 +54,7 @@ function getCommonHeaders(customHeaders = {}) {
 /**
  * Register a new user account
  */
-export async function registerUser(name, email, password) {
+export async function registerUser(name, email, password, recaptchaToken = null) {
   try {
     const res = await fetch(getEndpoint('/api/auth/register'), {
       method: 'POST',
@@ -63,6 +63,7 @@ export async function registerUser(name, email, password) {
         name,
         email,
         password,
+        recaptchaToken: recaptchaToken || null,
         websiteId: siteConfig.websiteId || 'partial-existence',
       }),
     });

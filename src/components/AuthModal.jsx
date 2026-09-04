@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ReCaptcha from './ReCaptcha';
 
 export default function AuthModal() {
   const {
@@ -14,14 +15,17 @@ export default function AuthModal() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     setError('');
     setName('');
     setEmail('');
     setPassword('');
+    setRecaptchaToken('');
   }, [authModalMode, isAuthModalOpen]);
 
   useEffect(() => {
@@ -39,6 +43,12 @@ export default function AuthModal() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+
+    if (authModalMode === 'register' && !recaptchaToken) {
+      setError('Please verify that you are not a robot (reCAPTCHA is required).');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -48,13 +58,17 @@ export default function AuthModal() {
           setError(res.error || 'Failed to sign in');
         }
       } else {
-        const res = await register(name, email, password);
+        const res = await register(name, email, password, recaptchaToken);
         if (!res.success) {
           setError(res.error || 'Failed to create account');
+          if (recaptchaRef.current) recaptchaRef.current.reset();
+          setRecaptchaToken('');
         }
       }
     } catch (err) {
       setError(err.message || 'An unexpected error occurred');
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken('');
     } finally {
       setSubmitting(false);
     }
@@ -156,6 +170,19 @@ export default function AuthModal() {
               minLength={6}
             />
           </div>
+
+          {authModalMode === 'register' && (
+            <div className="auth-form-group auth-form-group--captcha">
+              <ReCaptcha
+                onVerify={(token) => {
+                  setRecaptchaToken(token);
+                  setError('');
+                }}
+                onExpired={() => setRecaptchaToken('')}
+                resetRef={recaptchaRef}
+              />
+            </div>
+          )}
 
           <button
             type="submit"
