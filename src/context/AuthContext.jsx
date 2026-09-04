@@ -45,9 +45,15 @@ export function AuthProvider({ children }) {
 
   async function register(name, email, password, recaptchaToken = null) {
     const res = await registerUser(name, email, password, recaptchaToken);
-    if (res.success && res.user) {
-      setUser(res.user);
-      setIsAuthModalOpen(false);
+    if (res.success) {
+      if (res.user) {
+        setUser(res.user);
+        setIsAuthModalOpen(false);
+        return res;
+      }
+      // Fallback: Seamlessly authenticate user with credentials if session wasn't directly returned
+      const loginRes = await login(email, password);
+      return loginRes;
     }
     return res;
   }

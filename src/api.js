@@ -15,6 +15,7 @@ import {
   setAuthToken,
   clearAuthToken,
   setAuthUser,
+  saveAuthorName,
 } from './cookies';
 
 function getEndpoint(path) {
@@ -78,6 +79,16 @@ export async function registerUser(name, email, password, recaptchaToken = null)
     }
     if (data.user) {
       setAuthUser(data.user);
+      if (data.user.name) {
+        saveAuthorName(data.user.name);
+      }
+    } else if (name) {
+      saveAuthorName(name);
+    }
+    if (email) {
+      try {
+        localStorage.setItem('pe_author_email', email);
+      } catch {}
     }
 
     return { success: true, user: data.user, token: data.token };
@@ -111,6 +122,14 @@ export async function loginUser(email, password) {
     }
     if (data.user) {
       setAuthUser(data.user);
+      if (data.user.name) {
+        saveAuthorName(data.user.name);
+      }
+    }
+    if (email) {
+      try {
+        localStorage.setItem('pe_author_email', email);
+      } catch {}
     }
 
     return { success: true, user: data.user, token: data.token };
