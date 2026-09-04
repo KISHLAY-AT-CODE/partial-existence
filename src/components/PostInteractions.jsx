@@ -789,7 +789,6 @@ export default function PostInteractions({ slug, github, allpoetry }) {
                   <span className="interactions__auth-name">
                     Commenting as <strong>{user?.name}</strong>
                   </span>
-                  <span className="interactions__auth-verified">✓ Verified Author</span>
                 </div>
               </div>
 
@@ -848,11 +847,6 @@ export default function PostInteractions({ slug, github, allpoetry }) {
                         </span>
                         <span className="interactions__comment-author">
                           {comment.author}
-                          {comment.isVerified && (
-                            <span className="interactions__verified-badge" title="Verified registered author">
-                              ✓ Verified
-                            </span>
-                          )}
                           {canDelete && <span className="interactions__comment-you">You</span>}
                           {comment.subscribeUpdates && (
                             <span className="interactions__comment-badge" title="Subscribed to blog updates">

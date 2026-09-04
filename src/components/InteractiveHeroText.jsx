@@ -455,7 +455,7 @@ export default function InteractiveHeroText({ titlePrefix, titleAccent, subtitle
             </svg>
           </a>
 
-          {/* 16 Grid Squares: Exactly equal to 38px underlying grid cells */}
+          {/* Unified Solid Logo Container */}
           <div
             className="hero-logo-grid"
             role="button"
@@ -468,23 +468,12 @@ export default function InteractiveHeroText({ titlePrefix, titleAccent, subtitle
               }
             }}
           >
-            <div className="hero-logo-grid__tiles">
-              {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, idx) => {
-                const row = Math.floor(idx / GRID_SIZE);
-                const col = idx % GRID_SIZE;
-                return (
-                  <div
-                    key={idx}
-                    ref={(el) => (avatarTilesRef.current[idx] = el)}
-                    className="hero-logo-grid__cell"
-                    style={{
-                      backgroundImage: `url(${avatarSrc})`,
-                      backgroundPosition: `-${col * CELL_SIZE}px -${row * CELL_SIZE}px`,
-                    }}
-                  />
-                );
-              })}
-            </div>
+            <img
+              src={avatarSrc}
+              alt={author || 'Interactive Logo'}
+              className="hero-logo-img"
+              draggable="false"
+            />
 
             {/* Hover Overlay: Animated clicking cursor indicator */}
             <div className="hero-logo-hover-overlay" aria-hidden={!isLogoHovered}>

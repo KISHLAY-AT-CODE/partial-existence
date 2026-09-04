@@ -1098,7 +1098,7 @@ a:hover {
   }
 }
 
-/* ---- Exact 38px Grid-Aligned Subtle Lift-Off Logo ---- */
+/* ---- Exact 152px Grid-Aligned Smooth Avatar Logo ---- */
 .hero-logo-grid {
   position: relative;
   z-index: 2;
@@ -1110,67 +1110,42 @@ a:hover {
   transform-style: preserve-3d;
   cursor: pointer;
   outline: none;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  /* Dissolved soft boundaries blending seamlessly into the vector grid */
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000000 44%,
-    rgba(0, 0, 0, 0.72) 68%,
-    rgba(0, 0, 0, 0.2) 88%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000000 44%,
-    rgba(0, 0, 0, 0.72) 68%,
-    rgba(0, 0, 0, 0.2) 88%,
-    transparent 100%
-  );
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(10, 15, 12, 0.85);
+  border: 1.5px solid rgba(120, 168, 140, 0.3);
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(160, 192, 64, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.35s ease;
 }
 
-.hero-logo-grid__tiles {
-  position: relative;
-  width: 152px;
-  height: 152px;
-  display: grid;
-  grid-template-columns: repeat(4, 38px);
-  grid-template-rows: repeat(4, 38px);
-  gap: 0px;
-  margin: 0;
-  padding: 0;
-  transform-style: preserve-3d;
-  background: transparent;
-  border: none;
+.hero-logo-container:hover .hero-logo-grid,
+.hero-logo-container--revealed .hero-logo-grid {
+  transform: translateY(-4px) scale(1.03);
+  border-color: rgba(160, 192, 64, 0.6);
+  box-shadow: 
+    0 20px 45px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(160, 192, 64, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.hero-logo-grid__cell {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  margin: 0;
-  padding: 0;
-  background-size: 152px 152px;
-  background-repeat: no-repeat;
-  border: none;
-  outline: none;
-  border-radius: 4px;
-  transform-style: preserve-3d;
-  will-change: transform, box-shadow, z-index;
-  /* Dissolved soft boundaries around each partition */
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000000 68%,
-    rgba(0, 0, 0, 0.85) 86%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000000 68%,
-    rgba(0, 0, 0, 0.85) 86%,
-    transparent 100%
-  );
+.hero-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 18px;
+  user-select: none;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-logo-container:hover .hero-logo-img {
+  transform: scale(1.05);
 }
 
 .home__hero-content {

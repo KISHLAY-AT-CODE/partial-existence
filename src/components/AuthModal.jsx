@@ -95,7 +95,7 @@ export default function AuthModal() {
           <p className="auth-modal-desc">
             {authModalMode === 'login'
               ? 'Sign in to join the discussion and share your reflections.'
-              : 'Create an account to join the discussion and get verified author badges.'}
+              : 'Create an account to join the discussion and share your reflections.'}
           </p>
         </div>
 
