@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getLikes, toggleLike, getComments, postComment, deleteComment, getPageViews, recordPageView } from '../api';
+import { getLikes, toggleLike, getComments, postComment, deleteComment, getPageViews, recordPageView, getModerationConfig } from '../api';
 import { getSavedAuthorName, saveAuthorName, hasViewedPostCookie, markPostViewedCookie } from '../cookies';
 import { useAuth } from '../context/AuthContext';
 import { siteConfig } from '../site.config';
@@ -34,19 +34,43 @@ export default function PostInteractions({ slug, github, allpoetry }) {
   const [submitting, setSubmitting] = useState(false);
   const [isCheckingProfanity, setIsCheckingProfanity] = useState(false);
   const [scrambleSymbols, setScrambleSymbols] = useState('$%^&*#@!');
+  const [moderationConfig, setModerationConfig] = useState({
+    title: 'Looking for profanity words...',
+    subtitle: 'Verifying content against safety datasets, AI moderation & database filters',
+    symbols: ['$', '%', '^', '&', '*', '#', '@', '!'],
+    scrambleIntervalMs: 110,
+  });
   const [warningData, setWarningData] = useState(null);
   const [recaptchaToken, setRecaptchaToken] = useState('');
+
+  // Fetch SaaS Moderation Configuration from backend
+  useEffect(() => {
+    let active = true;
+    async function fetchModConfig() {
+      const cfg = await getModerationConfig();
+      if (active && cfg?.dialogue) {
+        setModerationConfig({
+          title: cfg.dialogue.title || 'Looking for profanity words...',
+          subtitle: cfg.dialogue.subtitle || 'Verifying content against safety datasets, AI moderation & database filters',
+          symbols: cfg.dialogue.symbols || ['$', '%', '^', '&', '*', '#', '@', '!'],
+          scrambleIntervalMs: cfg.dialogue.scrambleIntervalMs || 110,
+        });
+      }
+    }
+    fetchModConfig();
+    return () => { active = false; };
+  }, []);
 
   // Animated scramble effect for $%^&*#@! on the loading sentence
   useEffect(() => {
     if (!isCheckingProfanity) return;
-    const chars = ['$', '%', '^', '&', '*', '#', '@', '!'];
+    const chars = moderationConfig.symbols || ['$', '%', '^', '&', '*', '#', '@', '!'];
     const interval = setInterval(() => {
       const shuffled = [...chars].sort(() => 0.5 - Math.random()).join('');
       setScrambleSymbols(shuffled);
-    }, 110);
+    }, moderationConfig.scrambleIntervalMs || 110);
     return () => clearInterval(interval);
-  }, [isCheckingProfanity]);
+  }, [isCheckingProfanity, moderationConfig]);
   const [captchaError, setCaptchaError] = useState('');
   const recaptchaRef = useRef(null);
 
@@ -776,19 +800,19 @@ export default function PostInteractions({ slug, github, allpoetry }) {
             </div>
 
             <h4 className="profanity-modal-title">
-              Looking for profanity words...
+              {moderationConfig.title}
               <span className="profanity-title-symbols-badge" aria-hidden="true">
                 {scrambleSymbols}
               </span>
             </h4>
             <p className="profanity-modal-desc">
-              Verifying content against safety datasets, AI moderation & database filters
+              {moderationConfig.subtitle}
             </p>
 
             {/* Special Animated Symbols: $%^&*#@! */}
             <div className="profanity-symbols-track" aria-hidden="true">
-              {['$', '%', '^', '&', '*', '#', '@', '!'].map((sym, idx) => (
-                <span key={idx} className={`profanity-symbol sym-${idx + 1}`}>
+              {(moderationConfig.symbols || ['$', '%', '^', '&', '*', '#', '@', '!']).map((sym, idx) => (
+                <span key={idx} className={`profanity-symbol sym-${(idx % 8) + 1}`}>
                   {sym}
                 </span>
               ))}

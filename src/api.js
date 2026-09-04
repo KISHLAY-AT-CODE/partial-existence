@@ -356,3 +356,20 @@ export async function getBlogStats() {
     return null;
   }
 }
+
+/**
+ * Get dynamic moderation configuration from the SaaS backend
+ */
+export async function getModerationConfig() {
+  try {
+    const res = await fetch(
+      getEndpoint(`/api/moderation/config?websiteId=${encodeURIComponent(siteConfig.websiteId || 'partial-existence')}`),
+      { headers: getCommonHeaders() }
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.debug('[API] Get moderation config failed:', err.message);
+    return null;
+  }
+}
