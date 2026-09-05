@@ -90,13 +90,15 @@ export default function BlogPost({ slug }) {
   const rawHtml = marked.parse(body);
   const safeHtml = DOMPurify.sanitize(rawHtml, {
     ADD_TAGS: [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'iframe', 'span',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'iframe', 'span', 'br',
+      'div', 'p', 'blockquote', 'em', 'strong',
       'details', 'summary', 'svg', 'path', 'g', 'circle', 'rect', 'line', 'polygon', 'polyline'
     ],
     ADD_ATTR: [
       'id', 'src', 'alt', 'title', 'width', 'height', 'loading', 'style',
       'class', 'className', 'viewBox', 'fill', 'stroke', 'stroke-width',
-      'stroke-linecap', 'stroke-linejoin', 'xmlns', 'target', 'rel', 'd'
+      'stroke-linecap', 'stroke-linejoin', 'xmlns', 'target', 'rel', 'd',
+      'allow', 'allowfullscreen', 'frameborder', 'referrerpolicy'
     ],
   });
 

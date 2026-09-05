@@ -474,23 +474,23 @@ export default function InteractiveHeroText({ titlePrefix, titleAccent, subtitle
               className="hero-logo-img"
               draggable="false"
             />
+          </div>
 
-            {/* Hover Overlay: Animated clicking cursor indicator */}
-            <div className="hero-logo-hover-overlay" aria-hidden={!isLogoHovered}>
-              <div className="hero-logo-cursor-anim">
-                <div className="hero-logo-cursor-pulse" />
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="#ffffff"
-                  stroke="#000000"
-                  strokeWidth="1.2"
-                  className="hero-logo-cursor-hand"
-                >
-                  <path d="M9 3a2 2 0 0 1 2 2v6.5a.5.5 0 0 0 1 0V7a2 2 0 0 1 4 0v4.5a.5.5 0 0 0 1 0V9a2 2 0 0 1 4 0v6.5c0 4.14-3.36 7.5-7.5 7.5H13c-2.48 0-4.73-1.2-6.1-3.2L3.6 14.5a1.75 1.75 0 0 1 2.8-2.1L9 14.5V5a2 2 0 0 1 0-2z" />
-                </svg>
-              </div>
+          {/* Hover Overlay: Animated clicking cursor indicator floating above logo */}
+          <div className="hero-logo-hover-overlay" aria-hidden={!isLogoHovered}>
+            <div className="hero-logo-cursor-anim">
+              <div className="hero-logo-cursor-pulse" />
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="#ffffff"
+                stroke="#000000"
+                strokeWidth="1.2"
+                className="hero-logo-cursor-hand"
+              >
+                <path d="M9 3a2 2 0 0 1 2 2v6.5a.5.5 0 0 0 1 0V7a2 2 0 0 1 4 0v4.5a.5.5 0 0 0 1 0V9a2 2 0 0 1 4 0v6.5c0 4.14-3.36 7.5-7.5 7.5H13c-2.48 0-4.73-1.2-6.1-3.2L3.6 14.5a1.75 1.75 0 0 1 2.8-2.1L9 14.5V5a2 2 0 0 1 0-2z" />
+              </svg>
             </div>
           </div>
         </div>
